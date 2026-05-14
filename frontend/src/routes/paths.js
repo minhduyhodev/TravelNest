@@ -6,6 +6,7 @@ export const ROUTES = {
   login: "/login",
   register: "/register",
   account: "/account",
+  accountProfile: "/account/profile",
   staff: "/staff",
   admin: "/admin"
 };

@@ -5,6 +5,7 @@ import { cn } from "@/utils/cn";
 const navigationMap = {
   user: [
     { label: "Overview", href: "/account" },
+    { label: "Profile", href: "/account/profile" },
     { label: "My bookings", href: "/account/bookings" }
   ],
   staff: [

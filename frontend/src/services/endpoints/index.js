@@ -4,6 +4,12 @@ export const endpoints = {
     register: "/auth/register",
     me: "/auth/me"
   },
+  users: {
+    me: "/users/me",
+    addresses: "/users/me/addresses",
+    addressDetail: (addressId) => `/users/me/addresses/${addressId}`,
+    setDefaultAddress: (addressId) => `/users/me/addresses/${addressId}/default`
+  },
   hotels: {
     list: "/hotels",
     detail: (slug) => `/hotels/${slug}`

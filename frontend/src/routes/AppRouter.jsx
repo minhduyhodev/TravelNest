@@ -8,6 +8,7 @@ import { UserDashboardLayout } from "@/layouts/UserDashboardLayout";
 import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { AdminReportsPage } from "@/pages/admin/AdminReportsPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
+import { AccountProfilePage } from "@/pages/account/AccountProfilePage";
 import { UserBookingsPage } from "@/pages/account/UserBookingsPage";
 import { UserDashboardPage } from "@/pages/account/UserDashboardPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
@@ -38,6 +39,7 @@ export function AppRouter() {
       <Route element={<ProtectedRoute allowedRoles={["CUSTOMER", "STAFF", "ADMIN"]} />}>
         <Route element={<UserDashboardLayout />}>
           <Route path="/account" element={<UserDashboardPage />} />
+          <Route path="/account/profile" element={<AccountProfilePage />} />
           <Route path="/account/bookings" element={<UserBookingsPage />} />
         </Route>
       </Route>
