@@ -10,19 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/routes/paths";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { getDefaultRouteByRole } from "@/utils/auth";
 import { loginSchema } from "@/utils/validation/loginSchema";
-
-function getDefaultRouteByRole(role) {
-  if (role === "ADMIN") {
-    return "/admin";
-  }
-
-  if (role === "STAFF") {
-    return "/staff";
-  }
-
-  return "/account";
-}
 
 export function LoginForm() {
   const setSession = useAuthStore((state) => state.setSession);

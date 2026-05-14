@@ -7,8 +7,16 @@ export const useAuthStore = create(
       accessToken: null,
       refreshToken: null,
       user: null,
-      setSession: (session) => set(session),
-      clearSession: () => set({ accessToken: null, refreshToken: null, user: null })
+      hasHydrated: false,
+      setHasHydrated: (value) => set(() => ({ hasHydrated: value })),
+      setSession: (session) =>
+        set(() => ({
+          accessToken: session.accessToken ?? null,
+          refreshToken: session.refreshToken ?? null,
+          user: session.user ?? null
+        })),
+      clearSession: () =>
+        set(() => ({ accessToken: null, refreshToken: null, user: null }))
     }),
     {
       name: "travelnest-auth",
@@ -16,7 +24,10 @@ export const useAuthStore = create(
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         user: state.user
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated?.(true);
+      }
     }
   )
 );

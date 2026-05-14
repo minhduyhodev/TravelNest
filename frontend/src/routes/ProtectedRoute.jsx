@@ -6,6 +6,11 @@ import { useAuthStore } from "@/stores/useAuthStore";
 export function ProtectedRoute({ allowedRoles = [] }) {
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+
+  if (!hasHydrated) {
+    return null;
+  }
 
   if (!user) {
     return <Navigate to={ROUTES.login} replace state={{ from: location }} />;

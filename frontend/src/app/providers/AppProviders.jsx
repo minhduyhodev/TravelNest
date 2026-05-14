@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { AuthBootstrap } from "@/app/providers/AuthBootstrap";
 
 export function AppProviders({ children }) {
   const [queryClient] = useState(
@@ -15,5 +16,9 @@ export function AppProviders({ children }) {
       })
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthBootstrap>{children}</AuthBootstrap>
+    </QueryClientProvider>
+  );
 }

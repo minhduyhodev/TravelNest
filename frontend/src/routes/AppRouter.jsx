@@ -20,6 +20,10 @@ import { BookingCheckoutPage } from "@/pages/public/BookingCheckoutPage";
 import { HomePage } from "@/pages/public/HomePage";
 import { HotelDetailPage } from "@/pages/public/HotelDetailPage";
 import { HotelListPage } from "@/pages/public/HotelListPage";
+import { RestaurantDetailPage } from "@/pages/public/RestaurantDetailPage";
+import { RestaurantListPage } from "@/pages/public/RestaurantListPage";
+import { TourDetailPage } from "@/pages/public/TourDetailPage";
+import { TourListPage } from "@/pages/public/TourListPage";
 import { StaffDashboardPage } from "@/pages/staff/StaffDashboardPage";
 import { StaffQueuePage } from "@/pages/staff/StaffQueuePage";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
@@ -31,6 +35,10 @@ export function AppRouter() {
         <Route path="/" element={<HomePage />} />
         <Route path="/hotels" element={<HotelListPage />} />
         <Route path="/hotels/:slug" element={<HotelDetailPage />} />
+        <Route path="/tours" element={<TourListPage />} />
+        <Route path="/tours/:slug" element={<TourDetailPage />} />
+        <Route path="/restaurants" element={<RestaurantListPage />} />
+        <Route path="/restaurants/:slug" element={<RestaurantDetailPage />} />
         <Route path="/checkout" element={<BookingCheckoutPage />} />
       </Route>
 

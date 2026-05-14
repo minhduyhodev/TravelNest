@@ -3,38 +3,17 @@ import { NavLink } from "react-router-dom";
 
 import { PageShell } from "@/components/layout/PageShell";
 import { HotelCard } from "@/components/data-display/HotelCard";
+import { RestaurantCard } from "@/components/data-display/RestaurantCard";
+import { TourCard } from "@/components/data-display/TourCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
-const featuredHotels = [
-  {
-    slug: "da-nang-ocean-suites",
-    name: "Da Nang Ocean Suites",
-    location: "Da Nang, Vietnam",
-    description: "Modern beachfront stay with family rooms, spa, and late check-in.",
-    priceFrom: 2400000,
-    rating: 9.2
-  },
-  {
-    slug: "sapa-mountain-retreat",
-    name: "Sapa Mountain Retreat",
-    location: "Sapa, Vietnam",
-    description: "Scenic mountain lodge with curated trekking add-ons and breakfast.",
-    priceFrom: 1900000,
-    rating: 8.9
-  },
-  {
-    slug: "phu-quoc-lagoon-villa",
-    name: "Phu Quoc Lagoon Villa",
-    location: "Phu Quoc, Vietnam",
-    description: "Lagoon-facing villas for leisure travelers and couples.",
-    priceFrom: 3250000,
-    rating: 9.4
-  }
-];
+import { hotelCatalog, restaurantCatalog, tourCatalog } from "@/data/catalog";
 
 export function HomePage() {
   const { t } = useTranslation("home");
+  const featuredHotels = hotelCatalog.slice(0, 3);
+  const featuredTours = tourCatalog.slice(0, 3);
+  const featuredRestaurants = restaurantCatalog.slice(0, 3);
 
   return (
     <PageShell className="space-y-10">
@@ -52,7 +31,9 @@ export function HomePage() {
               <Button asChild>
                 <NavLink to="/hotels">Explore stays</NavLink>
               </Button>
-              <Button variant="outline">Build your itinerary</Button>
+              <Button variant="outline" asChild>
+                <NavLink to="/tours">Build your itinerary</NavLink>
+              </Button>
             </div>
           </div>
           <div className="rounded-xl border bg-card p-5 shadow-floating">
@@ -90,6 +71,44 @@ export function HomePage() {
         <div className="grid gap-4 md:grid-cols-3">
           {featuredHotels.map((hotel) => (
             <HotelCard key={hotel.slug} hotel={hotel} />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold md:text-3xl">Guided tours</h2>
+            <p className="text-muted-foreground">
+              Multi-day and day-trip catalog shells aligned with the Phase 2 roadmap.
+            </p>
+          </div>
+          <Button variant="ghost" asChild>
+            <NavLink to="/tours">View all</NavLink>
+          </Button>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {featuredTours.map((tour) => (
+            <TourCard key={tour.slug} tour={tour} />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold md:text-3xl">Dining reservations</h2>
+            <p className="text-muted-foreground">
+              Restaurant discovery and reservation-ready detail pages for the third public catalog stream.
+            </p>
+          </div>
+          <Button variant="ghost" asChild>
+            <NavLink to="/restaurants">View all</NavLink>
+          </Button>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {featuredRestaurants.map((restaurant) => (
+            <RestaurantCard key={restaurant.slug} restaurant={restaurant} />
           ))}
         </div>
       </section>

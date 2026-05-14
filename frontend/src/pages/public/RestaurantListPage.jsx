@@ -1,23 +1,23 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
-import { HotelCard } from "@/components/data-display/HotelCard";
+import { RestaurantCard } from "@/components/data-display/RestaurantCard";
 import { PageShell } from "@/components/layout/PageShell";
 import { Input } from "@/components/ui/input";
-import { hotelCatalog } from "@/data/catalog";
+import { restaurantCatalog } from "@/data/catalog";
 
-export function HotelListPage() {
+export function RestaurantListPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const hotels = useMemo(() => {
+  const restaurants = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     if (!normalizedSearch) {
-      return hotelCatalog;
+      return restaurantCatalog;
     }
 
-    return hotelCatalog.filter((hotel) =>
-      [hotel.name, hotel.location, hotel.description, hotel.tagline].some((field) =>
+    return restaurantCatalog.filter((restaurant) =>
+      [restaurant.name, restaurant.location, restaurant.description, restaurant.cuisine].some((field) =>
         field.toLowerCase().includes(normalizedSearch)
       )
     );
@@ -26,9 +26,9 @@ export function HotelListPage() {
   return (
     <PageShell className="space-y-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-semibold">Hotels</h1>
+        <h1 className="text-3xl font-semibold">Restaurants</h1>
         <p className="text-muted-foreground">
-          Client-side hotel listing page with filter-ready shell and pagination zone.
+          Dining catalog shell for reservation-focused discovery, cuisine filters, and service windows.
         </p>
       </div>
       <div className="grid gap-4 rounded-xl border bg-card p-4 md:grid-cols-[260px_1fr]">
@@ -39,23 +39,25 @@ export function HotelListPage() {
               <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-9"
-                placeholder="Destination or hotel name"
+                placeholder="Cuisine or restaurant name"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
             <div className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <p>Price range</p>
-              <p>Star rating</p>
-              <p>Amenities</p>
+              <p>Meal type</p>
+              <p>Available schedule</p>
+              <p>Average spend</p>
             </div>
           </div>
         </aside>
         <section className="space-y-4">
-          <p className="text-sm text-muted-foreground">{hotels.length} hotels available for the current filter.</p>
+          <p className="text-sm text-muted-foreground">
+            {restaurants.length} restaurants available for the current filter.
+          </p>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {hotels.map((hotel) => (
-              <HotelCard key={hotel.slug} hotel={hotel} />
+            {restaurants.map((restaurant) => (
+              <RestaurantCard key={restaurant.slug} restaurant={restaurant} />
             ))}
           </div>
         </section>
