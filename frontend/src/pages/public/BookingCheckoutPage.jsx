@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NavLink } from "react-router-dom";
 
 import { createOrderDraft } from "@/api/orders";
@@ -20,6 +20,7 @@ import { useBookingStore } from "@/stores/useBookingStore";
 import { formatCurrency } from "@/utils/currency";
 
 export function BookingCheckoutPage() {
+  const queryClient = useQueryClient();
   const draft = useBookingStore((state) => state.draft);
   const setDraft = useBookingStore((state) => state.setDraft);
   const resetDraft = useBookingStore((state) => state.resetDraft);
@@ -37,6 +38,7 @@ export function BookingCheckoutPage() {
   const createOrderMutation = useMutation({
     mutationFn: createOrderDraft,
     onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.booking.history });
       setPageMessageTone("success");
       setPageMessage(
         `Checkout draft ${response.orderCode} saved successfully. Estimated total ${formatCurrency(response.totalAmount)}.`
@@ -74,13 +76,7 @@ export function BookingCheckoutPage() {
     if (Object.keys(nextDraft).length > 0) {
       setDraft(nextDraft);
     }
-  }, [
-    currentUser,
-    draft.contactEmail,
-    draft.contactFullName,
-    draft.contactPhone,
-    setDraft
-  ]);
+  }, [currentUser, draft.contactEmail, draft.contactFullName, draft.contactPhone, setDraft]);
 
   const defaultAddress = addressesQuery.data?.find((address) => address.isDefault);
 

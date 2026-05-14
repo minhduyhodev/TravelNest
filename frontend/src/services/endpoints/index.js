@@ -28,7 +28,7 @@ export const endpoints = {
   },
   booking: {
     checkout: "/orders",
-    history: "/bookings"
+    history: "/orders/me"
   },
   dashboard: {
     user: "/dashboard/user",

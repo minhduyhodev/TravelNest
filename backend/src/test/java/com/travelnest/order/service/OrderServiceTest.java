@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -218,5 +219,72 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.createDraftOrder(authenticatedUser, request))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Reservation time must be within the restaurant operating hours");
+    }
+
+    @Test
+    void getCurrentUserOrders_returnsMappedHistoryInNewestFirstOrder() {
+        OrderEntity newestOrder = new OrderEntity();
+        newestOrder.setId(1002L);
+        newestOrder.setOrderCode("TN-NEWEST");
+        newestOrder.setStatus("PENDING");
+        newestOrder.setSubtotal(new BigDecimal("8580000"));
+        newestOrder.setDiscountAmount(BigDecimal.ZERO);
+        newestOrder.setTotalAmount(new BigDecimal("8580000"));
+        newestOrder.setPreferredPaymentMethod("MOMO");
+        newestOrder.setContactName("Travel Customer");
+        newestOrder.setContactPhone("0901234567");
+        newestOrder.setContactEmail("customer@travelnest.test");
+
+        com.travelnest.order.entity.OrderItemEntity newestItem = new com.travelnest.order.entity.OrderItemEntity();
+        newestItem.setServiceType("TOUR");
+        newestItem.setServiceId(8L);
+        newestItem.setServiceName("Ha Giang Loop Escape");
+        newestItem.setVariantId(21L);
+        newestItem.setVariantName("Departure 2026-06-08");
+        newestItem.setQuantity(2);
+        newestItem.setGuestCount(2);
+        newestItem.setStartDate(LocalDate.of(2026, 6, 8));
+        newestItem.setEndDate(LocalDate.of(2026, 6, 10));
+        newestItem.setServiceTime(LocalTime.of(6, 0));
+        newestItem.setUnitPrice(new BigDecimal("4290000"));
+        newestItem.setSubtotal(new BigDecimal("8580000"));
+        newestOrder.addItem(newestItem);
+
+        OrderEntity olderOrder = new OrderEntity();
+        olderOrder.setId(1001L);
+        olderOrder.setOrderCode("TN-OLDER");
+        olderOrder.setStatus("PENDING");
+        olderOrder.setSubtotal(new BigDecimal("1520000"));
+        olderOrder.setDiscountAmount(BigDecimal.ZERO);
+        olderOrder.setTotalAmount(new BigDecimal("1520000"));
+        olderOrder.setPreferredPaymentMethod("VNPAY");
+        olderOrder.setContactName("Travel Customer");
+        olderOrder.setContactPhone("0901234567");
+        olderOrder.setContactEmail("customer@travelnest.test");
+
+        com.travelnest.order.entity.OrderItemEntity olderItem = new com.travelnest.order.entity.OrderItemEntity();
+        olderItem.setServiceType("RESTAURANT");
+        olderItem.setServiceId(11L);
+        olderItem.setServiceName("Ember Riverside Grill");
+        olderItem.setVariantName("Table reservation");
+        olderItem.setQuantity(4);
+        olderItem.setGuestCount(4);
+        olderItem.setStartDate(LocalDate.of(2026, 6, 15));
+        olderItem.setEndDate(LocalDate.of(2026, 6, 15));
+        olderItem.setServiceTime(LocalTime.of(19, 0));
+        olderItem.setUnitPrice(new BigDecimal("380000"));
+        olderItem.setSubtotal(new BigDecimal("1520000"));
+        olderOrder.addItem(olderItem);
+
+        when(userRepository.findById(7L)).thenReturn(Optional.of(user));
+        when(orderRepository.findAllByUserIdOrderByCreatedAtDesc(7L)).thenReturn(List.of(newestOrder, olderOrder));
+
+        List<OrderResponse> response = orderService.getCurrentUserOrders(authenticatedUser);
+
+        assertThat(response).hasSize(2);
+        assertThat(response.getFirst().getOrderCode()).isEqualTo("TN-NEWEST");
+        assertThat(response.getFirst().getServiceType()).isEqualTo("TOUR");
+        assertThat(response.get(1).getOrderCode()).isEqualTo("TN-OLDER");
+        assertThat(response.get(1).getServiceTime()).isEqualTo(LocalTime.of(19, 0));
     }
 }

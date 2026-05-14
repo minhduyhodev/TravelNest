@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
@@ -94,6 +95,15 @@ public class OrderService {
 
         OrderEntity savedOrder = orderRepository.save(order);
         return mapResponse(savedOrder, item);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getCurrentUserOrders(AuthenticatedUser authenticatedUser) {
+        requireUser(authenticatedUser.getUserId());
+        return orderRepository.findAllByUserIdOrderByCreatedAtDesc(authenticatedUser.getUserId()).stream()
+                .filter(order -> !order.getItems().isEmpty())
+                .map(order -> mapResponse(order, getPrimaryItem(order)))
+                .toList();
     }
 
     private DraftOrderItemSnapshot buildSnapshot(String serviceType, CreateOrderRequest request) {
@@ -248,6 +258,12 @@ public class OrderService {
                 order.getSpecialRequests(),
                 order.getCreatedAt()
         );
+    }
+
+    private OrderItemEntity getPrimaryItem(OrderEntity order) {
+        return order.getItems().stream()
+                .findFirst()
+                .orElseThrow(() -> new BadRequestException("Order is missing line items"));
     }
 
     private UserEntity requireUser(Long userId) {
