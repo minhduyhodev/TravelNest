@@ -1,0 +1,243 @@
+CREATE TABLE hotels (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    name_vi VARCHAR(255) NOT NULL,
+    name_en VARCHAR(255) NOT NULL,
+    slug VARCHAR(300) NOT NULL,
+    description_vi TEXT NULL,
+    description_en TEXT NULL,
+    address VARCHAR(255) NOT NULL,
+    district VARCHAR(100) NOT NULL,
+    province VARCHAR(100) NOT NULL,
+    latitude DECIMAL(10, 8) NULL,
+    longitude DECIMAL(11, 8) NULL,
+    phone VARCHAR(20) NULL,
+    email VARCHAR(255) NULL,
+    check_in_time TIME NOT NULL DEFAULT '14:00:00',
+    check_out_time TIME NOT NULL DEFAULT '12:00:00',
+    cancel_policy_vi TEXT NULL,
+    cancel_policy_en TEXT NULL,
+    avg_rating DECIMAL(3, 2) NOT NULL DEFAULT 0.00,
+    total_reviews INT NOT NULL DEFAULT 0,
+    thumbnail_url VARCHAR(500) NULL,
+    star_rating TINYINT NOT NULL DEFAULT 3,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_hotels_slug (slug),
+    INDEX idx_hotels_status (status),
+    INDEX idx_hotels_province (province),
+    INDEX idx_hotels_star_rating (star_rating)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE hotel_amenities (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    name_vi VARCHAR(150) NOT NULL,
+    name_en VARCHAR(150) NOT NULL,
+    code VARCHAR(100) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_hotel_amenities_code (code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE hotel_amenity_map (
+    hotel_id BIGINT NOT NULL,
+    amenity_id BIGINT NOT NULL,
+    PRIMARY KEY (hotel_id, amenity_id),
+    CONSTRAINT fk_hotel_amenity_map_hotel FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE,
+    CONSTRAINT fk_hotel_amenity_map_amenity FOREIGN KEY (amenity_id) REFERENCES hotel_amenities(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE room_types (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    hotel_id BIGINT NOT NULL,
+    name_vi VARCHAR(150) NOT NULL,
+    name_en VARCHAR(150) NOT NULL,
+    description_vi TEXT NULL,
+    description_en TEXT NULL,
+    max_guests TINYINT NOT NULL DEFAULT 2,
+    area_sqm DECIMAL(6, 2) NULL,
+    bed_type_vi VARCHAR(100) NULL,
+    bed_type_en VARCHAR(100) NULL,
+    base_price DECIMAL(15, 2) NOT NULL,
+    weekend_price DECIMAL(15, 2) NULL,
+    total_rooms INT NOT NULL DEFAULT 1,
+    thumbnail_url VARCHAR(500) NULL,
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_room_types_hotel_id (hotel_id),
+    CONSTRAINT fk_room_types_hotel FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE hotel_images (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    hotel_id BIGINT NOT NULL,
+    image_url VARCHAR(500) NOT NULL,
+    alt_text VARCHAR(255) NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_hotel_images_hotel_id (hotel_id),
+    CONSTRAINT fk_hotel_images_hotel FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE room_type_images (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    room_type_id BIGINT NOT NULL,
+    image_url VARCHAR(500) NOT NULL,
+    alt_text VARCHAR(255) NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_room_type_images_room_type_id (room_type_id),
+    CONSTRAINT fk_room_type_images_room_type FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO hotel_amenities (name_vi, name_en, code) VALUES
+('Ho boi vo cuc', 'Infinity pool', 'infinity-pool'),
+('Bua sang mien phi', 'Breakfast included', 'breakfast-included'),
+('Dua don san bay', 'Airport transfer', 'airport-transfer'),
+('Phong gia dinh', 'Family rooms', 'family-rooms'),
+('Concierge trekking', 'Trekking concierge', 'trekking-concierge'),
+('Phong cho co loi suoi', 'Fireplace lounge', 'fireplace-lounge'),
+('Xe dua don nui', 'Mountain shuttle', 'mountain-shuttle'),
+('Thuong tra dac san', 'Tea tasting', 'tea-tasting'),
+('Ho rieng nho', 'Private plunge pool', 'private-plunge-pool'),
+('Ben kayak luc hoang hon', 'Sunset kayak access', 'sunset-kayak-access'),
+('Spa cap doi', 'Couple spa', 'couple-spa'),
+('Dich vu thuyen rieng', 'Private boat service', 'private-boat-service'),
+('Quan ca phe ben song', 'Riverfront cafe', 'riverfront-cafe'),
+('Thue xe dap', 'Cycling rentals', 'cycling-rentals'),
+('Concierge dia phuong', 'Local concierge', 'local-concierge'),
+('Phong doc yen tinh', 'Quiet reading room', 'quiet-reading-room');
+
+INSERT INTO hotels (
+    name_vi, name_en, slug, description_vi, description_en, address, district, province, phone, email,
+    check_in_time, check_out_time, cancel_policy_vi, cancel_policy_en, avg_rating, total_reviews,
+    thumbnail_url, star_rating, status
+) VALUES
+(
+    'Da Nang Ocean Suites',
+    'Da Nang Ocean Suites',
+    'da-nang-ocean-suites',
+    'Khu nghi duong sat bien hien dai voi phong gia dinh, spa lounge va check-in linh hoat.',
+    'Modern beachfront stay with family rooms, a spa lounge, and flexible late check-in.',
+    '27 Vo Nguyen Giap',
+    'Son Tra',
+    'Da Nang',
+    '02363999999',
+    'stay@ocean-suites.vn',
+    '14:00:00',
+    '12:00:00',
+    'Mien phi huy truoc 48 gio. Ho tro nhan phong som theo tinh trang trong.',
+    'Free cancellation up to 48 hours before arrival. Early check-in is subject to availability.',
+    9.20,
+    184,
+    NULL,
+    5,
+    'ACTIVE'
+),
+(
+    'Sapa Mountain Retreat',
+    'Sapa Mountain Retreat',
+    'sapa-mountain-retreat',
+    'Khu lodge nhin ra nui doi, phu hop cho ky nghi trekking va trai nghiem bua sang dia phuong.',
+    'Scenic mountain lodge with curated trekking add-ons and a warm local breakfast experience.',
+    '12 Muong Hoa',
+    'Sa Pa',
+    'Lao Cai',
+    '02143888888',
+    'hello@saparetreat.vn',
+    '13:00:00',
+    '11:30:00',
+    'Can dat coc 1 dem. Tre em duoi 6 tuoi o mien phi khi ngu chung.',
+    'A one-night deposit is required. Children under six stay free when sharing existing beds.',
+    8.90,
+    133,
+    NULL,
+    4,
+    'ACTIVE'
+),
+(
+    'Phu Quoc Lagoon Villa',
+    'Phu Quoc Lagoon Villa',
+    'phu-quoc-lagoon-villa',
+    'Biet thu huong ho nuoc danh cho ky nghi cap doi va du khach tim trai nghiem ngam hoang hon.',
+    'Lagoon-facing villas designed for leisure travelers, couples, and anniversary trips.',
+    '88 Tran Hung Dao',
+    'Duong Dong',
+    'Kien Giang',
+    '02973911111',
+    'bookings@lagoonvilla.vn',
+    '15:00:00',
+    '12:00:00',
+    'Khong hut thuoc trong biet thu. Bua sang phuc vu linh hoat va co the bo tri theo yeu cau.',
+    'Smoking is not allowed inside the villas. Breakfast timing is flexible on request.',
+    9.40,
+    96,
+    NULL,
+    5,
+    'ACTIVE'
+),
+(
+    'Hue Riverside Boutique',
+    'Hue Riverside Boutique',
+    'hue-riverside-boutique',
+    'Khach san boutique ben song danh cho ky nghi van hoa trong thanh pho voi phong premium gon gang.',
+    'Elegant riverside property made for culture-led city breaks with compact premium rooms.',
+    '5 Le Loi',
+    'Phu Hoi',
+    'Hue',
+    '02343922222',
+    'stay@hueriverside.vn',
+    '14:00:00',
+    '12:00:00',
+    'Huy truoc 24 gio. Khach can xuat trinh giay to tuy than khi nhan phong.',
+    'Cancellation is available up to 24 hours before arrival. A valid ID is required at check-in.',
+    8.80,
+    71,
+    NULL,
+    4,
+    'ACTIVE'
+);
+
+INSERT INTO room_types (
+    hotel_id, name_vi, name_en, description_vi, description_en, max_guests, area_sqm, bed_type_vi, bed_type_en,
+    base_price, weekend_price, total_rooms, thumbnail_url
+) VALUES
+((SELECT id FROM hotels WHERE slug = 'da-nang-ocean-suites'), 'Deluxe Ocean', 'Deluxe Ocean', 'Phong huong bien cho cap doi hoac gia dinh nho.', 'Ocean-facing room for couples or small families.', 2, 36.00, '1 giuong king', '1 king bed', 2400000, 2750000, 14, NULL),
+((SELECT id FROM hotels WHERE slug = 'da-nang-ocean-suites'), 'Family Suite', 'Family Suite', 'Suite rong cho nhom gia dinh.', 'Spacious suite for family groups.', 4, 52.00, '2 giuong queen', '2 queen beds', 3100000, 3450000, 8, NULL),
+((SELECT id FROM hotels WHERE slug = 'da-nang-ocean-suites'), 'Panorama King', 'Panorama King', 'Phong tang cao co tam nhin toan canh.', 'High-floor room with panoramic view.', 2, 40.00, '1 giuong king', '1 king bed', 2850000, 3200000, 6, NULL),
+((SELECT id FROM hotels WHERE slug = 'sapa-mountain-retreat'), 'Valley Studio', 'Valley Studio', 'Phong nhin ra thung lung.', 'Valley-facing studio room.', 2, 30.00, '1 giuong queen', '1 queen bed', 1900000, 2200000, 10, NULL),
+((SELECT id FROM hotels WHERE slug = 'sapa-mountain-retreat'), 'Family Loft', 'Family Loft', 'Loft am cung cho gia dinh.', 'Warm loft room for families.', 4, 44.00, '2 giuong doi', '2 double beds', 2550000, 2850000, 5, NULL),
+((SELECT id FROM hotels WHERE slug = 'sapa-mountain-retreat'), 'Premium Ridge Room', 'Premium Ridge Room', 'Phong cao cap nhin day nui.', 'Premium ridge-facing room.', 2, 35.00, '1 giuong king', '1 king bed', 2300000, 2600000, 4, NULL),
+((SELECT id FROM hotels WHERE slug = 'phu-quoc-lagoon-villa'), 'Lagoon Villa', 'Lagoon Villa', 'Biet thu huong dam nuoc.', 'Lagoon-facing villa.', 2, 58.00, '1 giuong king', '1 king bed', 3250000, 3600000, 7, NULL),
+((SELECT id FROM hotels WHERE slug = 'phu-quoc-lagoon-villa'), 'Garden Villa', 'Garden Villa', 'Biet thu vuon rieng tu.', 'Garden villa with private setting.', 2, 54.00, '1 giuong king', '1 king bed', 3480000, 3820000, 5, NULL),
+((SELECT id FROM hotels WHERE slug = 'phu-quoc-lagoon-villa'), 'Signature Sunset Villa', 'Signature Sunset Villa', 'Biet thu cao cap cho ky nghi dac biet.', 'Signature villa for celebratory stays.', 3, 72.00, '1 giuong king + sofa bed', '1 king bed + sofa bed', 4200000, 4650000, 3, NULL),
+((SELECT id FROM hotels WHERE slug = 'hue-riverside-boutique'), 'Classic Queen', 'Classic Queen', 'Phong queen co thiet ke boutique.', 'Boutique queen room.', 2, 24.00, '1 giuong queen', '1 queen bed', 1650000, 1890000, 12, NULL),
+((SELECT id FROM hotels WHERE slug = 'hue-riverside-boutique'), 'Riverfront Deluxe', 'Riverfront Deluxe', 'Phong huong song gan pho co.', 'Riverfront room near the old quarter.', 2, 28.00, '1 giuong king', '1 king bed', 1980000, 2250000, 7, NULL),
+((SELECT id FROM hotels WHERE slug = 'hue-riverside-boutique'), 'Junior Heritage Suite', 'Junior Heritage Suite', 'Suite nho phong cach di san.', 'Compact suite with heritage-inspired styling.', 3, 34.00, '1 giuong king', '1 king bed', 2290000, 2580000, 4, NULL);
+
+INSERT INTO hotel_amenity_map (hotel_id, amenity_id) VALUES
+((SELECT id FROM hotels WHERE slug = 'da-nang-ocean-suites'), (SELECT id FROM hotel_amenities WHERE code = 'infinity-pool')),
+((SELECT id FROM hotels WHERE slug = 'da-nang-ocean-suites'), (SELECT id FROM hotel_amenities WHERE code = 'family-rooms')),
+((SELECT id FROM hotels WHERE slug = 'da-nang-ocean-suites'), (SELECT id FROM hotel_amenities WHERE code = 'breakfast-included')),
+((SELECT id FROM hotels WHERE slug = 'da-nang-ocean-suites'), (SELECT id FROM hotel_amenities WHERE code = 'airport-transfer')),
+((SELECT id FROM hotels WHERE slug = 'sapa-mountain-retreat'), (SELECT id FROM hotel_amenities WHERE code = 'trekking-concierge')),
+((SELECT id FROM hotels WHERE slug = 'sapa-mountain-retreat'), (SELECT id FROM hotel_amenities WHERE code = 'fireplace-lounge')),
+((SELECT id FROM hotels WHERE slug = 'sapa-mountain-retreat'), (SELECT id FROM hotel_amenities WHERE code = 'mountain-shuttle')),
+((SELECT id FROM hotels WHERE slug = 'sapa-mountain-retreat'), (SELECT id FROM hotel_amenities WHERE code = 'tea-tasting')),
+((SELECT id FROM hotels WHERE slug = 'phu-quoc-lagoon-villa'), (SELECT id FROM hotel_amenities WHERE code = 'private-plunge-pool')),
+((SELECT id FROM hotels WHERE slug = 'phu-quoc-lagoon-villa'), (SELECT id FROM hotel_amenities WHERE code = 'sunset-kayak-access')),
+((SELECT id FROM hotels WHERE slug = 'phu-quoc-lagoon-villa'), (SELECT id FROM hotel_amenities WHERE code = 'couple-spa')),
+((SELECT id FROM hotels WHERE slug = 'phu-quoc-lagoon-villa'), (SELECT id FROM hotel_amenities WHERE code = 'private-boat-service')),
+((SELECT id FROM hotels WHERE slug = 'hue-riverside-boutique'), (SELECT id FROM hotel_amenities WHERE code = 'riverfront-cafe')),
+((SELECT id FROM hotels WHERE slug = 'hue-riverside-boutique'), (SELECT id FROM hotel_amenities WHERE code = 'cycling-rentals')),
+((SELECT id FROM hotels WHERE slug = 'hue-riverside-boutique'), (SELECT id FROM hotel_amenities WHERE code = 'local-concierge')),
+((SELECT id FROM hotels WHERE slug = 'hue-riverside-boutique'), (SELECT id FROM hotel_amenities WHERE code = 'quiet-reading-room'));

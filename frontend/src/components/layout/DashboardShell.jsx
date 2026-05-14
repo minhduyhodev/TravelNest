@@ -1,5 +1,7 @@
+import { PlaneTakeoff } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
+import { ROUTES } from "@/routes/paths";
 import { cn } from "@/utils/cn";
 
 const navigationMap = {
@@ -26,6 +28,17 @@ export function DashboardShell({ variant, title, subtitle, children }) {
     <div className="min-h-screen bg-surface-1">
       <div className="container grid gap-6 py-6 lg:grid-cols-[260px_1fr]">
         <aside className="rounded-xl border bg-card p-4">
+          <div className="mb-6 space-y-4 border-b pb-4">
+            <NavLink to={ROUTES.home} className="flex items-center gap-2 text-primary">
+              <PlaneTakeoff className="h-5 w-5" />
+              <div>
+                <p className="font-heading text-lg font-semibold">TravelNest</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  {variant} workspace
+                </p>
+              </div>
+            </NavLink>
+          </div>
           <p className="mb-4 font-heading text-lg font-semibold capitalize">{variant}</p>
           <nav className="space-y-2">
             {items.map((item) => (

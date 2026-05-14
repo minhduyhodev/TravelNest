@@ -3,10 +3,10 @@ import { axiosClient } from "@/services/http/axiosClient";
 
 export async function fetchHotels(params = {}) {
   const { data } = await axiosClient.get(endpoints.hotels.list, { params });
-  return data;
+  return data.data;
 }
 
 export async function fetchHotelDetail(slug) {
   const { data } = await axiosClient.get(endpoints.hotels.detail(slug));
-  return data;
+  return data.data;
 }

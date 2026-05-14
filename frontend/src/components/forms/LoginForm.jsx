@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -15,11 +16,14 @@ import { loginSchema } from "@/utils/validation/loginSchema";
 
 export function LoginForm() {
   const setSession = useAuthStore((state) => state.setSession);
+  const currentUser = useAuthStore((state) => state.user);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const navigate = useNavigate();
   const location = useLocation();
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -28,6 +32,7 @@ export function LoginForm() {
       password: ""
     }
   });
+  const [email, password] = watch(["email", "password"]);
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -41,6 +46,23 @@ export function LoginForm() {
   const onSubmit = (values) => {
     loginMutation.mutate(values);
   };
+
+  useEffect(() => {
+    if (loginMutation.isError) {
+      loginMutation.reset();
+    }
+  }, [email, password, loginMutation]);
+
+  useEffect(() => {
+    if (!hasHydrated || !currentUser) {
+      return;
+    }
+
+    const destination = location.state?.from?.pathname || getDefaultRouteByRole(currentUser.role);
+    if (location.pathname !== destination) {
+      navigate(destination, { replace: true });
+    }
+  }, [currentUser, hasHydrated, location.pathname, location.state, navigate]);
 
   return (
     <Card>

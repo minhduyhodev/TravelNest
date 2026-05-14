@@ -1,17 +1,39 @@
+import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, MapPin, Star, Users } from "lucide-react";
 import { NavLink, useParams } from "react-router-dom";
 
+import { fetchHotelDetail } from "@/api/hotels";
+import { queryKeys } from "@/api/queryKeys";
 import { BookingSummaryCard } from "@/components/data-display/BookingSummaryCard";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { findHotelBySlug } from "@/data/catalog";
+import { formatCurrency } from "@/utils/currency";
 
 export function HotelDetailPage() {
   const { slug } = useParams();
-  const hotel = findHotelBySlug(slug);
+  const hotelQuery = useQuery({
+    queryKey: queryKeys.hotels.detail(slug),
+    queryFn: () => fetchHotelDetail(slug),
+    enabled: Boolean(slug)
+  });
 
-  if (!hotel) {
+  if (hotelQuery.isLoading) {
+    return (
+      <PageShell className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Loading hotel</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            Pulling the latest hotel detail from the TravelNest API.
+          </CardContent>
+        </Card>
+      </PageShell>
+    );
+  }
+
+  if (hotelQuery.isError || !hotelQuery.data) {
     return (
       <PageShell className="space-y-6">
         <Card>
@@ -20,7 +42,7 @@ export function HotelDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              The selected hotel is not available in the current catalog sample.
+              {hotelQuery.error?.message || "The selected hotel is not available right now."}
             </p>
             <Button asChild>
               <NavLink to="/hotels">Back to hotels</NavLink>
@@ -30,6 +52,8 @@ export function HotelDetailPage() {
       </PageShell>
     );
   }
+
+  const hotel = hotelQuery.data;
 
   return (
     <PageShell className="space-y-6">
@@ -49,7 +73,9 @@ export function HotelDetailPage() {
               {hotel.location}
             </p>
             <p className="max-w-3xl text-muted-foreground">{hotel.description}</p>
-            <p className="text-sm font-medium text-primary">{hotel.tagline}</p>
+            <p className="text-sm font-medium text-primary">
+              From {formatCurrency(hotel.priceFrom)} per stay option.
+            </p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
@@ -65,7 +91,7 @@ export function HotelDetailPage() {
                 <CardTitle className="text-base">Policies</CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
-                {hotel.policies.length} stay rules prepared for checkout integration.
+                {hotel.policies.length} stay rules ready for checkout integration.
               </CardContent>
             </Card>
             <Card>
@@ -108,13 +134,17 @@ export function HotelDetailPage() {
               <CardTitle>Reserve your stay</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <span>Starting from</span>
+                <span className="font-semibold text-primary">{formatCurrency(hotel.priceFrom)}</span>
+              </div>
               <div className="flex items-center gap-2 rounded-md border p-3">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                18 Jun - 20 Jun
+                Check-in {hotel.checkInTime} / Check-out {hotel.checkOutTime}
               </div>
               <div className="flex items-center gap-2 rounded-md border p-3">
                 <Users className="h-4 w-4 text-primary" />
-                2 adults, 1 room
+                {hotel.roomOptions.length} room options ready
               </div>
               <Button className="w-full">Continue to booking</Button>
             </CardContent>
