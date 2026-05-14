@@ -7,5 +7,5 @@ export function getDefaultRouteByRole(role) {
     return "/staff";
   }
 
-  return "/account";
+  return "/";
 }

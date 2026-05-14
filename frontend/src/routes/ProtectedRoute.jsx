@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { ROUTES } from "@/routes/paths";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { getDefaultRouteByRole } from "@/utils/auth";
 
 export function ProtectedRoute({ allowedRoles = [] }) {
   const location = useLocation();
@@ -17,7 +18,7 @@ export function ProtectedRoute({ allowedRoles = [] }) {
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return <Navigate to={ROUTES.account} replace />;
+    return <Navigate to={getDefaultRouteByRole(user.role) || ROUTES.home} replace />;
   }
 
   return <Outlet />;
