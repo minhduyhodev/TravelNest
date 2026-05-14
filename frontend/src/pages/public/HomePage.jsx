@@ -1,19 +1,36 @@
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 
+import { fetchHotels } from "@/api/hotels";
+import { queryKeys } from "@/api/queryKeys";
+import { fetchRestaurants } from "@/api/restaurants";
+import { fetchTours } from "@/api/tours";
 import { PageShell } from "@/components/layout/PageShell";
 import { HotelCard } from "@/components/data-display/HotelCard";
 import { RestaurantCard } from "@/components/data-display/RestaurantCard";
 import { TourCard } from "@/components/data-display/TourCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { hotelCatalog, restaurantCatalog, tourCatalog } from "@/data/catalog";
 
 export function HomePage() {
   const { t } = useTranslation("home");
-  const featuredHotels = hotelCatalog.slice(0, 3);
-  const featuredTours = tourCatalog.slice(0, 3);
-  const featuredRestaurants = restaurantCatalog.slice(0, 3);
+  const hotelsQuery = useQuery({
+    queryKey: queryKeys.hotels.list({ featured: true }),
+    queryFn: () => fetchHotels()
+  });
+  const toursQuery = useQuery({
+    queryKey: queryKeys.tours.list({ featured: true }),
+    queryFn: () => fetchTours()
+  });
+  const restaurantsQuery = useQuery({
+    queryKey: queryKeys.restaurants.list({ featured: true }),
+    queryFn: () => fetchRestaurants()
+  });
+
+  const featuredHotels = (hotelsQuery.data || []).slice(0, 3);
+  const featuredTours = (toursQuery.data || []).slice(0, 3);
+  const featuredRestaurants = (restaurantsQuery.data || []).slice(0, 3);
 
   return (
     <PageShell className="space-y-10">

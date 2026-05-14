@@ -59,7 +59,12 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/error"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/hotels", "/hotels/*").permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/hotels", "/hotels/*",
+                                "/tours", "/tours/*",
+                                "/restaurants", "/restaurants/*"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )

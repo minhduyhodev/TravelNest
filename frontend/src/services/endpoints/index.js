@@ -18,6 +18,14 @@ export const endpoints = {
     list: "/hotels",
     detail: (slug) => `/hotels/${slug}`
   },
+  tours: {
+    list: "/tours",
+    detail: (slug) => `/tours/${slug}`
+  },
+  restaurants: {
+    list: "/restaurants",
+    detail: (slug) => `/restaurants/${slug}`
+  },
   booking: {
     checkout: "/orders",
     history: "/bookings"

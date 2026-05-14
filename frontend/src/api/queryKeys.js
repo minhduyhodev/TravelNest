@@ -12,6 +12,14 @@ export const queryKeys = {
     list: (params) => ["hotels", "list", params],
     detail: (slug) => ["hotels", "detail", slug]
   },
+  tours: {
+    list: (params) => ["tours", "list", params],
+    detail: (slug) => ["tours", "detail", slug]
+  },
+  restaurants: {
+    list: (params) => ["restaurants", "list", params],
+    detail: (slug) => ["restaurants", "detail", slug]
+  },
   booking: {
     checkout: ["booking", "checkout"],
     history: ["booking", "history"]

@@ -1,17 +1,38 @@
+import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, Clock3, MapPin, Star } from "lucide-react";
 import { NavLink, useParams } from "react-router-dom";
 
+import { fetchTourDetail } from "@/api/tours";
+import { queryKeys } from "@/api/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageShell } from "@/components/layout/PageShell";
-import { findTourBySlug } from "@/data/catalog";
 import { formatCurrency } from "@/utils/currency";
 
 export function TourDetailPage() {
   const { slug } = useParams();
-  const tour = findTourBySlug(slug);
+  const tourQuery = useQuery({
+    queryKey: queryKeys.tours.detail(slug),
+    queryFn: () => fetchTourDetail(slug),
+    enabled: Boolean(slug)
+  });
 
-  if (!tour) {
+  if (tourQuery.isLoading) {
+    return (
+      <PageShell className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Loading tour</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            Pulling the latest tour detail from the TravelNest API.
+          </CardContent>
+        </Card>
+      </PageShell>
+    );
+  }
+
+  if (tourQuery.isError || !tourQuery.data) {
     return (
       <PageShell className="space-y-6">
         <Card>
@@ -20,7 +41,7 @@ export function TourDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              The selected tour is not available in the current catalog sample.
+              {tourQuery.error?.message || "The selected tour is not available right now."}
             </p>
             <Button asChild>
               <NavLink to="/tours">Back to tours</NavLink>
@@ -30,6 +51,8 @@ export function TourDetailPage() {
       </PageShell>
     );
   }
+
+  const tour = tourQuery.data;
 
   return (
     <PageShell className="space-y-6">
@@ -59,15 +82,17 @@ export function TourDetailPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Departure</CardTitle>
+              <CardTitle className="text-base">Departure</CardTitle>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">{tour.departure}</CardContent>
+              <CardContent className="text-sm text-muted-foreground">
+                {tour.departurePoint || tour.departure}
+              </CardContent>
             </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Highlights</CardTitle>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">{tour.highlights.length} curated stops</CardContent>
+              <CardContent className="text-sm text-muted-foreground">{tour.highlights.length} curated inclusions</CardContent>
             </Card>
           </div>
           <Card>
@@ -94,6 +119,20 @@ export function TourDetailPage() {
               ))}
             </CardContent>
           </Card>
+          {tour.requirements?.length ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Requirements</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {tour.requirements.map((requirement) => (
+                  <div key={requirement} className="rounded-xl border px-4 py-3 text-sm text-muted-foreground">
+                    {requirement}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ) : null}
         </section>
         <aside className="space-y-4">
           <Card>
@@ -103,7 +142,7 @@ export function TourDetailPage() {
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center gap-2 rounded-md border p-3">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                Flexible departure schedule
+                {tour.departure}
               </div>
               <div className="flex items-center gap-2 rounded-md border p-3">
                 <Clock3 className="h-4 w-4 text-primary" />

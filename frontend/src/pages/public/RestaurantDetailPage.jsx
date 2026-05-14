@@ -1,17 +1,38 @@
+import { useQuery } from "@tanstack/react-query";
 import { Clock3, MapPin, Star, UtensilsCrossed } from "lucide-react";
 import { NavLink, useParams } from "react-router-dom";
 
+import { fetchRestaurantDetail } from "@/api/restaurants";
+import { queryKeys } from "@/api/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageShell } from "@/components/layout/PageShell";
-import { findRestaurantBySlug } from "@/data/catalog";
 import { formatCurrency } from "@/utils/currency";
 
 export function RestaurantDetailPage() {
   const { slug } = useParams();
-  const restaurant = findRestaurantBySlug(slug);
+  const restaurantQuery = useQuery({
+    queryKey: queryKeys.restaurants.detail(slug),
+    queryFn: () => fetchRestaurantDetail(slug),
+    enabled: Boolean(slug)
+  });
 
-  if (!restaurant) {
+  if (restaurantQuery.isLoading) {
+    return (
+      <PageShell className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Loading restaurant</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            Pulling the latest restaurant detail from the TravelNest API.
+          </CardContent>
+        </Card>
+      </PageShell>
+    );
+  }
+
+  if (restaurantQuery.isError || !restaurantQuery.data) {
     return (
       <PageShell className="space-y-6">
         <Card>
@@ -20,7 +41,7 @@ export function RestaurantDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              The selected restaurant is not available in the current catalog sample.
+              {restaurantQuery.error?.message || "The selected restaurant is not available right now."}
             </p>
             <Button asChild>
               <NavLink to="/restaurants">Back to restaurants</NavLink>
@@ -30,6 +51,8 @@ export function RestaurantDetailPage() {
       </PageShell>
     );
   }
+
+  const restaurant = restaurantQuery.data;
 
   return (
     <PageShell className="space-y-6">
@@ -65,19 +88,21 @@ export function RestaurantDetailPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Menu preview</CardTitle>
+                <CardTitle className="text-base">Menu categories</CardTitle>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">{restaurant.menuPreview.length} standout dishes</CardContent>
+              <CardContent className="text-sm text-muted-foreground">
+                {restaurant.menuCategories.length} dining sections
+              </CardContent>
             </Card>
           </div>
           <Card>
             <CardHeader>
-              <CardTitle>Dining highlights</CardTitle>
+              <CardTitle>Reservation notes</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">
-              {restaurant.highlights.map((highlight) => (
-                <div key={highlight} className="rounded-xl border bg-surface-1 px-4 py-3 text-sm text-muted-foreground">
-                  {highlight}
+              {restaurant.policies.map((policy) => (
+                <div key={policy} className="rounded-xl border bg-surface-1 px-4 py-3 text-sm text-muted-foreground">
+                  {policy}
                 </div>
               ))}
             </CardContent>
