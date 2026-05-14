@@ -11,8 +11,11 @@ import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AccountProfilePage } from "@/pages/account/AccountProfilePage";
 import { UserBookingsPage } from "@/pages/account/UserBookingsPage";
 import { UserDashboardPage } from "@/pages/account/UserDashboardPage";
+import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { RegisterPage } from "@/pages/auth/RegisterPage";
+import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage";
+import { VerifyResetOtpPage } from "@/pages/auth/VerifyResetOtpPage";
 import { BookingCheckoutPage } from "@/pages/public/BookingCheckoutPage";
 import { HomePage } from "@/pages/public/HomePage";
 import { HotelDetailPage } from "@/pages/public/HotelDetailPage";
@@ -34,6 +37,9 @@ export function AppRouter() {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-reset-otp" element={<VerifyResetOtpPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={["CUSTOMER", "STAFF", "ADMIN"]} />}>

@@ -2,8 +2,13 @@ package com.travelnest.auth.controller;
 
 import com.travelnest.auth.dto.AuthResponse;
 import com.travelnest.auth.dto.ChangePasswordRequest;
+import com.travelnest.auth.dto.ForgotPasswordRequest;
+import com.travelnest.auth.dto.ForgotPasswordResponse;
 import com.travelnest.auth.dto.LoginRequest;
 import com.travelnest.auth.dto.RegisterRequest;
+import com.travelnest.auth.dto.ResetPasswordRequest;
+import com.travelnest.auth.dto.VerifyResetOtpRequest;
+import com.travelnest.auth.dto.VerifyResetOtpResponse;
 import com.travelnest.auth.service.AuthService;
 import com.travelnest.common.api.ApiResponse;
 import com.travelnest.security.AuthenticatedUser;
@@ -40,6 +45,32 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Logged in successfully", authService.login(request)));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<ForgotPasswordResponse>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "If the email exists, a reset OTP has been issued",
+                authService.forgotPassword(request)
+        ));
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<ApiResponse<VerifyResetOtpResponse>> verifyResetOtp(
+            @Valid @RequestBody VerifyResetOtpRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Reset OTP verified successfully",
+                authService.verifyResetOtp(request)
+        ));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully", null));
     }
 
     @GetMapping("/me")

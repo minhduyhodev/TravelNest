@@ -1,13 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { login } from "@/api/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ROUTES } from "@/routes/paths";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { loginSchema } from "@/utils/validation/loginSchema";
 
@@ -76,6 +77,11 @@ export function LoginForm() {
             {errors.password && (
               <p className="text-sm text-status-danger">{errors.password.message}</p>
             )}
+          </div>
+          <div className="text-right text-sm">
+            <Link className="text-primary hover:underline" to={ROUTES.forgotPassword}>
+              Forgot password?
+            </Link>
           </div>
           <Button className="w-full" type="submit">
             {loginMutation.isPending ? "Signing in..." : "Sign in"}
