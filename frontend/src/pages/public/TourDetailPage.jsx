@@ -1,15 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, Clock3, MapPin, Star } from "lucide-react";
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink, useNavigate, useParams } from "react-router-dom";
 
 import { fetchTourDetail } from "@/api/tours";
 import { queryKeys } from "@/api/queryKeys";
+import { BookingSummaryCard } from "@/components/data-display/BookingSummaryCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createTourBookingDraft } from "@/features/booking/draft";
 import { PageShell } from "@/components/layout/PageShell";
+import { useBookingStore } from "@/stores/useBookingStore";
 import { formatCurrency } from "@/utils/currency";
 
 export function TourDetailPage() {
+  const navigate = useNavigate();
+  const replaceDraft = useBookingStore((state) => state.replaceDraft);
   const { slug } = useParams();
   const tourQuery = useQuery({
     queryKey: queryKeys.tours.detail(slug),
@@ -53,6 +58,12 @@ export function TourDetailPage() {
   }
 
   const tour = tourQuery.data;
+  const bookingPreview = createTourBookingDraft(tour);
+
+  const handleContinueToBooking = () => {
+    replaceDraft(bookingPreview);
+    navigate("/checkout");
+  };
 
   return (
     <PageShell className="space-y-6">
@@ -82,7 +93,7 @@ export function TourDetailPage() {
             </Card>
             <Card>
               <CardHeader>
-              <CardTitle className="text-base">Departure</CardTitle>
+                <CardTitle className="text-base">Departure</CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
                 {tour.departurePoint || tour.departure}
@@ -152,9 +163,12 @@ export function TourDetailPage() {
                 <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">From</p>
                 <p className="mt-1 text-2xl font-semibold text-primary">{formatCurrency(tour.priceFrom)}</p>
               </div>
-              <Button className="w-full">Continue to booking</Button>
+              <Button className="w-full" onClick={handleContinueToBooking}>
+                Continue to booking
+              </Button>
             </CardContent>
           </Card>
+          <BookingSummaryCard draft={bookingPreview} />
         </aside>
       </div>
     </PageShell>

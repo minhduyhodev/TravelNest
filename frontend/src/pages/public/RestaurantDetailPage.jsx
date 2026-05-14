@@ -1,15 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { Clock3, MapPin, Star, UtensilsCrossed } from "lucide-react";
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink, useNavigate, useParams } from "react-router-dom";
 
 import { fetchRestaurantDetail } from "@/api/restaurants";
 import { queryKeys } from "@/api/queryKeys";
+import { BookingSummaryCard } from "@/components/data-display/BookingSummaryCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createRestaurantBookingDraft } from "@/features/booking/draft";
 import { PageShell } from "@/components/layout/PageShell";
+import { useBookingStore } from "@/stores/useBookingStore";
 import { formatCurrency } from "@/utils/currency";
 
 export function RestaurantDetailPage() {
+  const navigate = useNavigate();
+  const replaceDraft = useBookingStore((state) => state.replaceDraft);
   const { slug } = useParams();
   const restaurantQuery = useQuery({
     queryKey: queryKeys.restaurants.detail(slug),
@@ -53,6 +58,12 @@ export function RestaurantDetailPage() {
   }
 
   const restaurant = restaurantQuery.data;
+  const bookingPreview = createRestaurantBookingDraft(restaurant);
+
+  const handleContinueToBooking = () => {
+    replaceDraft(bookingPreview);
+    navigate("/checkout");
+  };
 
   return (
     <PageShell className="space-y-6">
@@ -138,9 +149,12 @@ export function RestaurantDetailPage() {
                 <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Average spend</p>
                 <p className="mt-1 text-2xl font-semibold text-primary">{formatCurrency(restaurant.priceFrom)}</p>
               </div>
-              <Button className="w-full">Continue to booking</Button>
+              <Button className="w-full" onClick={handleContinueToBooking}>
+                Continue to booking
+              </Button>
             </CardContent>
           </Card>
+          <BookingSummaryCard draft={bookingPreview} />
         </aside>
       </div>
     </PageShell>

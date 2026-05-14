@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, MapPin, Star, Users } from "lucide-react";
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink, useNavigate, useParams } from "react-router-dom";
 
 import { fetchHotelDetail } from "@/api/hotels";
 import { queryKeys } from "@/api/queryKeys";
@@ -8,9 +8,13 @@ import { BookingSummaryCard } from "@/components/data-display/BookingSummaryCard
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createHotelBookingDraft } from "@/features/booking/draft";
+import { useBookingStore } from "@/stores/useBookingStore";
 import { formatCurrency } from "@/utils/currency";
 
 export function HotelDetailPage() {
+  const navigate = useNavigate();
+  const replaceDraft = useBookingStore((state) => state.replaceDraft);
   const { slug } = useParams();
   const hotelQuery = useQuery({
     queryKey: queryKeys.hotels.detail(slug),
@@ -54,6 +58,12 @@ export function HotelDetailPage() {
   }
 
   const hotel = hotelQuery.data;
+  const bookingPreview = createHotelBookingDraft(hotel);
+
+  const handleContinueToBooking = () => {
+    replaceDraft(bookingPreview);
+    navigate("/checkout");
+  };
 
   return (
     <PageShell className="space-y-6">
@@ -146,10 +156,12 @@ export function HotelDetailPage() {
                 <Users className="h-4 w-4 text-primary" />
                 {hotel.roomOptions.length} room options ready
               </div>
-              <Button className="w-full">Continue to booking</Button>
+              <Button className="w-full" onClick={handleContinueToBooking}>
+                Continue to booking
+              </Button>
             </CardContent>
           </Card>
-          <BookingSummaryCard />
+          <BookingSummaryCard draft={bookingPreview} />
         </aside>
       </div>
     </PageShell>
