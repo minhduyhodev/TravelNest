@@ -4,7 +4,9 @@ export const queryKeys = {
   },
   users: {
     me: ["users", "me"],
-    addresses: ["users", "addresses"]
+    addresses: ["users", "addresses"],
+    staffRoot: ["users", "staff"],
+    staff: (status) => ["users", "staff", status || "all"]
   },
   hotels: {
     list: (params) => ["hotels", "list", params],

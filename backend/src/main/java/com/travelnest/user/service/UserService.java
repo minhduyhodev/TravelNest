@@ -12,6 +12,7 @@ import com.travelnest.user.entity.RoleEntity;
 import com.travelnest.user.entity.UserEntity;
 import com.travelnest.user.entity.UserRole;
 import com.travelnest.user.entity.UserStatus;
+import java.util.List;
 import com.travelnest.user.repository.RoleRepository;
 import com.travelnest.user.repository.UserRepository;
 import java.util.LinkedHashSet;
@@ -42,6 +43,17 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserProfileResponse getCurrentUserProfile(AuthenticatedUser authenticatedUser) {
         return userMapper.toResponse(requireUser(authenticatedUser.getUserId()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserProfileResponse> getStaffAccounts(UserStatus status) {
+        List<UserEntity> staffAccounts = status == null
+                ? userRepository.findAllByRoleAndIsDeletedFalseOrderByCreatedAtDesc(UserRole.STAFF)
+                : userRepository.findAllByRoleAndStatusAndIsDeletedFalseOrderByCreatedAtDesc(UserRole.STAFF, status);
+
+        return staffAccounts.stream()
+                .map(userMapper::toResponse)
+                .toList();
     }
 
     @Transactional

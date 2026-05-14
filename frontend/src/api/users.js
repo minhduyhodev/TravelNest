@@ -6,8 +6,25 @@ export async function fetchCurrentUserProfile() {
   return data.data;
 }
 
+export async function fetchStaffAccounts(status) {
+  const { data } = await axiosClient.get(endpoints.users.staff, {
+    params: status ? { status } : {}
+  });
+  return data.data;
+}
+
 export async function updateCurrentUserProfile(payload) {
   const { data } = await axiosClient.patch(endpoints.users.me, payload);
+  return data.data;
+}
+
+export async function createStaffAccount(payload) {
+  const { data } = await axiosClient.post("/users/staff", payload);
+  return data.data;
+}
+
+export async function updateUserStatus(userId, payload) {
+  const { data } = await axiosClient.patch(`/users/${userId}/status`, payload);
   return data.data;
 }
 

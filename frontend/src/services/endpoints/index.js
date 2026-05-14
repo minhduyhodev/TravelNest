@@ -6,6 +6,7 @@ export const endpoints = {
   },
   users: {
     me: "/users/me",
+    staff: "/users/staff",
     addresses: "/users/me/addresses",
     addressDetail: (addressId) => `/users/me/addresses/${addressId}`,
     setDefaultAddress: (addressId) => `/users/me/addresses/${addressId}/default`

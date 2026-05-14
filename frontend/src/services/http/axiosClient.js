@@ -22,8 +22,28 @@ axiosClient.interceptors.request.use((config) => {
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    const responseData = error?.response?.data;
+    const responseStatus = responseData?.status || error?.response?.status || null;
+
+    if (responseStatus === 401) {
+      useAuthStore.getState().clearSession();
+    }
+
+    const validationErrors = responseData?.validationErrors || null;
+    const firstValidationMessage = validationErrors
+      ? Object.values(validationErrors)[0]
+      : null;
     const message =
-      error?.response?.data?.message || error.message || "Unexpected API error";
-    return Promise.reject(new Error(message));
+      firstValidationMessage ||
+      responseData?.message ||
+      error.message ||
+      "Unexpected API error";
+
+    const enhancedError = new Error(message);
+    enhancedError.status = responseStatus;
+    enhancedError.validationErrors = validationErrors;
+    enhancedError.raw = responseData || null;
+
+    return Promise.reject(enhancedError);
   }
 );

@@ -2,7 +2,6 @@ package com.travelnest.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -59,10 +58,6 @@ public class JwtService {
 
     private Key getSigningKey() {
         String secret = jwtProperties.secret();
-        try {
-            return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
-        } catch (IllegalArgumentException exception) {
-            return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        }
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 }
