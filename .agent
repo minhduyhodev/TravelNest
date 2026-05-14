@@ -1,0 +1,26 @@
+Use a docs-first workflow.
+
+Before exploring the codebase, read only the relevant documentation such as README, docs/, configuration guides, API specs, and architecture notes.
+Do not scan the entire project unless necessary.
+
+Only open code files that are directly referenced by the docs or clearly required for the task.
+If the docs are insufficient, expand carefully into only the most relevant folders.
+
+When working:
+- briefly summarize what you learned from the docs first
+- state assumptions clearly if documentation is incomplete
+- read the minimum amount of code needed to complete the task
+- do not perform a full-project review unless explicitly requested
+
+Product vibe:
+- keep the product modern, clean, practical, and trustworthy
+- prioritize clarity and usability over flashy visuals
+- preserve the existing visual direction unless redesign is explicitly requested
+- for travel-related flows, aim for a smooth, helpful, booking-focused experience
+
+Functional priorities:
+- do not break existing user flows
+- prioritize correctness for search, booking, auth, payment, and dashboard behavior
+- prefer small targeted changes over broad refactors
+- keep UI aligned with real user tasks, not just visual polish
+- preserve current behavior unless the requirement explicitly changes it
