@@ -29,6 +29,9 @@ public interface HotelRepository extends JpaRepository<HotelEntity, Long> {
             """)
     List<HotelEntity> searchPublicHotels(@Param("keyword") String keyword);
 
+    @EntityGraph(attributePaths = {"roomTypes"})
+    Optional<HotelEntity> findByIdAndDeletedFalseAndStatus(Long id, String status);
+
     @EntityGraph(attributePaths = {"roomTypes", "amenities"})
     Optional<HotelEntity> findBySlugAndDeletedFalseAndStatus(String slug, String status);
 }

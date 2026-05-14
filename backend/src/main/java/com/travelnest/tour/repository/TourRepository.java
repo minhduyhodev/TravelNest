@@ -31,6 +31,9 @@ public interface TourRepository extends JpaRepository<TourEntity, Long> {
             """)
     List<TourEntity> searchPublicTours(@Param("keyword") String keyword);
 
+    @EntityGraph(attributePaths = {"slots"})
+    Optional<TourEntity> findByIdAndDeletedFalseAndStatus(Long id, String status);
+
     @EntityGraph(attributePaths = {"itineraries", "slots"})
     Optional<TourEntity> findBySlugAndDeletedFalseAndStatus(String slug, String status);
 }

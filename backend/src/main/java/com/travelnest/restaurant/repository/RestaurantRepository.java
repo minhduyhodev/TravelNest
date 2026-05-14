@@ -31,6 +31,9 @@ public interface RestaurantRepository extends JpaRepository<RestaurantEntity, Lo
             """)
     List<RestaurantEntity> searchPublicRestaurants(@Param("keyword") String keyword);
 
+    @EntityGraph(attributePaths = {"menuItems"})
+    Optional<RestaurantEntity> findByIdAndDeletedFalseAndStatus(Long id, String status);
+
     @EntityGraph(attributePaths = {"menuCategories", "menuItems", "menuItems.category"})
     Optional<RestaurantEntity> findBySlugAndDeletedFalseAndStatus(String slug, String status);
 }

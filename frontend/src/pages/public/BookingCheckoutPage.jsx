@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { NavLink } from "react-router-dom";
 
+import { createOrderDraft } from "@/api/orders";
 import { fetchUserAddresses } from "@/api/users";
 import { queryKeys } from "@/api/queryKeys";
 import { BookingSummaryCard } from "@/components/data-display/BookingSummaryCard";
@@ -16,6 +17,7 @@ import {
 } from "@/features/booking/draft";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useBookingStore } from "@/stores/useBookingStore";
+import { formatCurrency } from "@/utils/currency";
 
 export function BookingCheckoutPage() {
   const draft = useBookingStore((state) => state.draft);
@@ -24,11 +26,30 @@ export function BookingCheckoutPage() {
   const currentUser = useAuthStore((state) => state.user);
   const accessToken = useAuthStore((state) => state.accessToken);
   const [pageMessage, setPageMessage] = useState("");
+  const [pageMessageTone, setPageMessageTone] = useState("success");
 
   const addressesQuery = useQuery({
     queryKey: queryKeys.users.addresses,
     queryFn: fetchUserAddresses,
     enabled: Boolean(accessToken)
+  });
+
+  const createOrderMutation = useMutation({
+    mutationFn: createOrderDraft,
+    onSuccess: (response) => {
+      setPageMessageTone("success");
+      setPageMessage(
+        `Checkout draft ${response.orderCode} saved successfully. Estimated total ${formatCurrency(response.totalAmount)}.`
+      );
+      setDraft({
+        orderId: response.id,
+        orderCode: response.orderCode
+      });
+    },
+    onError: (error) => {
+      setPageMessageTone("error");
+      setPageMessage(error.message);
+    }
   });
 
   useEffect(() => {
@@ -91,12 +112,47 @@ export function BookingCheckoutPage() {
       contactPhone: defaultAddress.phone,
       specialRequests: draft.specialRequests || `Default address: ${addressLine}`
     });
+    setPageMessageTone("success");
     setPageMessage("Default address details copied into the checkout draft.");
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setPageMessage("Checkout shell is ready. Payment submission will be connected in the next backend phase.");
+
+    if (!accessToken) {
+      setPageMessageTone("error");
+      setPageMessage("Please sign in before saving a checkout draft.");
+      return;
+    }
+
+    if (!draft.serviceType || !draft.serviceId) {
+      setPageMessageTone("error");
+      setPageMessage("The selected service is missing required checkout identifiers.");
+      return;
+    }
+
+    try {
+      await createOrderMutation.mutateAsync({
+        serviceType: draft.serviceType,
+        serviceId: draft.serviceId,
+        roomLabel: draft.roomLabel || null,
+        roomCount: draft.roomCount || null,
+        guestCount: draft.guestCount || null,
+        checkInDate: draft.checkInDate || null,
+        checkOutDate: draft.checkOutDate || null,
+        departureDate: draft.departureDate || null,
+        reservationDate: draft.reservationDate || null,
+        reservationTime: draft.reservationTime || null,
+        contactFullName: draft.contactFullName,
+        contactPhone: draft.contactPhone,
+        contactEmail: draft.contactEmail,
+        voucherCode: draft.voucherCode || null,
+        paymentMethod: draft.paymentMethod,
+        specialRequests: draft.specialRequests || null
+      });
+    } catch {
+      return;
+    }
   };
 
   if (!draft.serviceType) {
@@ -135,7 +191,13 @@ export function BookingCheckoutPage() {
         </p>
       </div>
       {pageMessage && (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div
+          className={`rounded-md border px-4 py-3 text-sm ${
+            pageMessageTone === "error"
+              ? "border-rose-200 bg-rose-50 text-rose-700"
+              : "border-emerald-200 bg-emerald-50 text-emerald-700"
+          }`}
+        >
           {pageMessage}
         </div>
       )}
@@ -144,7 +206,7 @@ export function BookingCheckoutPage() {
           <CardHeader>
             <CardTitle>Traveler details</CardTitle>
             <CardDescription>
-              This shell is ready for Phase 3 validation and can be wired to backend order endpoints next.
+              This checkout flow now saves a backend order draft so Phase 3 can keep moving toward full booking.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -154,7 +216,7 @@ export function BookingCheckoutPage() {
                   <div>
                     <h2 className="text-base font-semibold">Selection</h2>
                     <p className="text-sm text-muted-foreground">
-                      Adjust quantities and timing before the order API is connected.
+                      Adjust quantities and timing before this draft is saved to the order pipeline.
                     </p>
                   </div>
                   <Button type="button" variant="ghost" onClick={resetDraft}>
@@ -378,8 +440,8 @@ export function BookingCheckoutPage() {
                 </div>
               </section>
 
-              <Button className="w-full" type="submit">
-                Save checkout draft
+              <Button className="w-full" type="submit" disabled={createOrderMutation.isPending}>
+                {createOrderMutation.isPending ? "Saving checkout draft..." : "Save checkout draft"}
               </Button>
             </form>
           </CardContent>
