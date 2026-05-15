@@ -28,7 +28,11 @@ export const endpoints = {
   },
   booking: {
     create: "/bookings",
-    history: "/bookings/me"
+    history: "/bookings/me",
+    queue: "/bookings",
+    confirm: (bookingId) => `/bookings/${bookingId}/confirm`,
+    cancel: (bookingId) => `/bookings/${bookingId}/cancel`,
+    complete: (bookingId) => `/bookings/${bookingId}/complete`
   },
   orders: {
     checkout: "/orders",

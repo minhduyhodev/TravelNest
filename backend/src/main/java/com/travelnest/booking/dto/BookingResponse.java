@@ -36,4 +36,10 @@ public class BookingResponse {
     private String contactEmail;
     private String specialRequests;
     private LocalDateTime createdAt;
+    private String assignedStaffName;
+    private String staffNote;
+    private String cancelReason;
+    private LocalDateTime confirmedAt;
+    private LocalDateTime cancelledAt;
+    private LocalDateTime completedAt;
 }

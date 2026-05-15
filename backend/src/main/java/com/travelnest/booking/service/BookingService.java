@@ -1,6 +1,7 @@
 package com.travelnest.booking.service;
 
 import com.travelnest.booking.dto.BookingResponse;
+import com.travelnest.booking.dto.BookingActionRequest;
 import com.travelnest.booking.dto.CreateBookingRequest;
 import com.travelnest.booking.entity.BookingEntity;
 import com.travelnest.booking.entity.HotelBookingEntity;
@@ -25,6 +26,7 @@ import com.travelnest.user.entity.UserEntity;
 import com.travelnest.user.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
@@ -104,6 +106,71 @@ public class BookingService {
         return bookingRepository.findAllByUserIdOrderByCreatedAtDesc(authenticatedUser.getUserId()).stream()
                 .map(this::mapResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getManagementBookings(String status, String serviceType, LocalDate serviceDate) {
+        return bookingRepository.searchManagementBookings(
+                        normalizeFilter(status),
+                        normalizeFilter(serviceType),
+                        serviceDate
+                ).stream()
+                .map(this::mapResponse)
+                .toList();
+    }
+
+    @Transactional
+    public BookingResponse confirmBooking(
+            AuthenticatedUser authenticatedUser,
+            Long bookingId,
+            BookingActionRequest request
+    ) {
+        UserEntity actor = requireUser(authenticatedUser.getUserId());
+        BookingEntity booking = requireBooking(bookingId);
+        assertStatus(booking, "PENDING_CONFIRMATION", "Only pending bookings can be confirmed");
+        booking.setStatus("CONFIRMED");
+        booking.setConfirmedAt(LocalDateTime.now());
+        booking.setStaff(actor);
+        applyStaffNote(booking, request);
+        booking.getOrder().setStatus("CONFIRMED");
+        return mapResponse(booking);
+    }
+
+    @Transactional
+    public BookingResponse cancelBooking(
+            AuthenticatedUser authenticatedUser,
+            Long bookingId,
+            BookingActionRequest request
+    ) {
+        UserEntity actor = requireUser(authenticatedUser.getUserId());
+        BookingEntity booking = requireBooking(bookingId);
+        if (!"PENDING_CONFIRMATION".equals(booking.getStatus()) && !"CONFIRMED".equals(booking.getStatus())) {
+            throw new BadRequestException("Only pending or confirmed bookings can be cancelled");
+        }
+        booking.setStatus("CANCELLED");
+        booking.setCancelledAt(LocalDateTime.now());
+        booking.setStaff(actor);
+        applyStaffNote(booking, request);
+        booking.setCancelReason(resolveCancelReason(request, actor));
+        booking.getOrder().setStatus("CANCELLED");
+        return mapResponse(booking);
+    }
+
+    @Transactional
+    public BookingResponse completeBooking(
+            AuthenticatedUser authenticatedUser,
+            Long bookingId,
+            BookingActionRequest request
+    ) {
+        UserEntity actor = requireUser(authenticatedUser.getUserId());
+        BookingEntity booking = requireBooking(bookingId);
+        assertStatus(booking, "CONFIRMED", "Only confirmed bookings can be completed");
+        booking.setStatus("COMPLETED");
+        booking.setCompletedAt(LocalDateTime.now());
+        booking.setStaff(actor);
+        applyStaffNote(booking, request);
+        booking.getOrder().setStatus("COMPLETED");
+        return mapResponse(booking);
     }
 
     private HotelBookingEntity buildHotelBooking(OrderItemEntity orderItem) {
@@ -197,8 +264,19 @@ public class BookingService {
                 booking.getContactPhone(),
                 booking.getContactEmail(),
                 booking.getSpecialRequests(),
-                booking.getCreatedAt()
+                booking.getCreatedAt(),
+                booking.getStaff() == null ? null : firstNonBlank(booking.getStaff().getFullName(), booking.getStaff().getEmail()),
+                booking.getStaffNote(),
+                booking.getCancelReason(),
+                booking.getConfirmedAt(),
+                booking.getCancelledAt(),
+                booking.getCompletedAt()
         );
+    }
+
+    private BookingEntity requireBooking(Long bookingId) {
+        return bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
     }
 
     private OrderItemEntity getPrimaryOrderItem(OrderEntity order) {
@@ -211,6 +289,26 @@ public class BookingService {
         return userRepository.findById(userId)
                 .filter(user -> !user.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+    private void assertStatus(BookingEntity booking, String expectedStatus, String message) {
+        if (!expectedStatus.equals(booking.getStatus())) {
+            throw new BadRequestException(message);
+        }
+    }
+
+    private void applyStaffNote(BookingEntity booking, BookingActionRequest request) {
+        if (request == null || request.getStaffNote() == null || request.getStaffNote().isBlank()) {
+            return;
+        }
+        booking.setStaffNote(request.getStaffNote().trim());
+    }
+
+    private String resolveCancelReason(BookingActionRequest request, UserEntity actor) {
+        if (request != null && request.getCancelReason() != null && !request.getCancelReason().isBlank()) {
+            return request.getCancelReason().trim();
+        }
+        return "Cancelled by " + firstNonBlank(actor.getFullName(), actor.getEmail());
     }
 
     private Optional<RoomTypeEntity> findRoomTypeByName(HotelEntity hotel, String variantName) {
@@ -229,6 +327,13 @@ public class BookingService {
             throw new BadRequestException("Service type must be HOTEL, TOUR, or RESTAURANT");
         }
         return normalized;
+    }
+
+    private String normalizeFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim().toUpperCase(Locale.ROOT);
     }
 
     private String generateBookingCode() {

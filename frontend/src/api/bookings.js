@@ -10,3 +10,23 @@ export async function createBooking(payload) {
   const { data } = await axiosClient.post(endpoints.booking.create, payload);
   return data.data;
 }
+
+export async function fetchBookingQueue(params = {}) {
+  const { data } = await axiosClient.get(endpoints.booking.queue, { params });
+  return data.data;
+}
+
+export async function confirmBooking(bookingId, payload = {}) {
+  const { data } = await axiosClient.patch(endpoints.booking.confirm(bookingId), payload);
+  return data.data;
+}
+
+export async function cancelBooking(bookingId, payload = {}) {
+  const { data } = await axiosClient.patch(endpoints.booking.cancel(bookingId), payload);
+  return data.data;
+}
+
+export async function completeBooking(bookingId, payload = {}) {
+  const { data } = await axiosClient.patch(endpoints.booking.complete(bookingId), payload);
+  return data.data;
+}

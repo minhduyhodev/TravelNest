@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.travelnest.booking.dto.BookingActionRequest;
 import com.travelnest.booking.dto.BookingResponse;
 import com.travelnest.booking.dto.CreateBookingRequest;
 import com.travelnest.booking.entity.BookingEntity;
@@ -23,6 +24,7 @@ import com.travelnest.user.entity.UserEntity;
 import com.travelnest.user.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -194,5 +196,141 @@ class BookingServiceTest {
         assertThat(response).hasSize(1);
         assertThat(response.getFirst().getBookingCode()).isEqualTo("BK-001");
         assertThat(response.getFirst().getServiceName()).isEqualTo("Ha Giang Loop Escape");
+    }
+
+    @Test
+    void getManagementBookings_filtersByStatusServiceTypeAndDate() {
+        BookingEntity booking = new BookingEntity();
+        booking.setId(3001L);
+        booking.setBookingCode("BK-001");
+        booking.setStatus("PENDING_CONFIRMATION");
+        booking.setServiceType("TOUR");
+        booking.setServiceId(8L);
+        booking.setUser(user);
+        booking.setContactName("Travel Customer");
+        booking.setContactPhone("0901234567");
+        booking.setContactEmail("customer@travelnest.test");
+        booking.setGuestCount(2);
+
+        OrderEntity order = new OrderEntity();
+        order.setOrderCode("TN-1001");
+        order.setTotalAmount(new BigDecimal("8580000"));
+        order.setPreferredPaymentMethod("MOMO");
+        booking.setOrder(order);
+
+        OrderItemEntity item = new OrderItemEntity();
+        item.setServiceType("TOUR");
+        item.setServiceId(8L);
+        item.setServiceName("Ha Giang Loop Escape");
+        item.setVariantName("Departure 2026-06-08");
+        item.setQuantity(2);
+        item.setGuestCount(2);
+        item.setStartDate(LocalDate.of(2026, 6, 8));
+        item.setEndDate(LocalDate.of(2026, 6, 10));
+        booking.setOrderItem(item);
+
+        when(bookingRepository.searchManagementBookings(
+                "PENDING_CONFIRMATION",
+                "TOUR",
+                LocalDate.of(2026, 6, 8)
+        )).thenReturn(List.of(booking));
+
+        List<BookingResponse> response = bookingService.getManagementBookings(
+                "pending_confirmation",
+                "tour",
+                LocalDate.of(2026, 6, 8)
+        );
+
+        assertThat(response).hasSize(1);
+        assertThat(response.getFirst().getStatus()).isEqualTo("PENDING_CONFIRMATION");
+        assertThat(response.getFirst().getServiceType()).isEqualTo("TOUR");
+        assertThat(response.getFirst().getStartDate()).isEqualTo(LocalDate.of(2026, 6, 8));
+    }
+
+    @Test
+    void confirmBooking_movesPendingBookingToConfirmed() {
+        UserEntity staff = new UserEntity();
+        staff.setId(9L);
+        staff.setFullName("Staff Operator");
+
+        AuthenticatedUser staffUser = new AuthenticatedUser(
+                9L,
+                "staff@travelnest.test",
+                "secret",
+                "Staff Operator",
+                "STAFF",
+                Set.of(new SimpleGrantedAuthority("ROLE_STAFF"))
+        );
+
+        OrderEntity order = new OrderEntity();
+        order.setStatus("BOOKED");
+        order.setOrderCode("TN-1001");
+        order.setTotalAmount(new BigDecimal("1000000"));
+
+        OrderItemEntity item = new OrderItemEntity();
+        item.setServiceType("HOTEL");
+        item.setServiceId(15L);
+        item.setServiceName("Da Nang Ocean Suites");
+        item.setQuantity(2);
+        item.setGuestCount(2);
+        item.setUnitPrice(new BigDecimal("500000"));
+        item.setStartDate(LocalDate.of(2026, 6, 10));
+        item.setEndDate(LocalDate.of(2026, 6, 11));
+
+        BookingEntity booking = new BookingEntity();
+        booking.setId(3001L);
+        booking.setBookingCode("BK-001");
+        booking.setStatus("PENDING_CONFIRMATION");
+        booking.setServiceType("HOTEL");
+        booking.setServiceId(15L);
+        booking.setOrder(order);
+        booking.setOrderItem(item);
+        booking.setUser(user);
+        booking.setContactName("Travel Customer");
+        booking.setContactPhone("0901234567");
+        booking.setContactEmail("customer@travelnest.test");
+        booking.setGuestCount(2);
+
+        when(userRepository.findById(9L)).thenReturn(Optional.of(staff));
+        when(bookingRepository.findById(3001L)).thenReturn(Optional.of(booking));
+
+        BookingResponse response = bookingService.confirmBooking(
+                staffUser,
+                3001L,
+                new BookingActionRequest("Room prepared", null)
+        );
+
+        assertThat(response.getStatus()).isEqualTo("CONFIRMED");
+        assertThat(booking.getConfirmedAt()).isBeforeOrEqualTo(LocalDateTime.now());
+        assertThat(booking.getStaff()).isEqualTo(staff);
+        assertThat(order.getStatus()).isEqualTo("CONFIRMED");
+        assertThat(response.getAssignedStaffName()).isEqualTo("Staff Operator");
+        assertThat(response.getStaffNote()).isEqualTo("Room prepared");
+    }
+
+    @Test
+    void completeBooking_rejectsPendingBooking() {
+        UserEntity staff = new UserEntity();
+        staff.setId(9L);
+
+        AuthenticatedUser staffUser = new AuthenticatedUser(
+                9L,
+                "staff@travelnest.test",
+                "secret",
+                "Staff Operator",
+                "STAFF",
+                Set.of(new SimpleGrantedAuthority("ROLE_STAFF"))
+        );
+
+        BookingEntity booking = new BookingEntity();
+        booking.setId(3001L);
+        booking.setStatus("PENDING_CONFIRMATION");
+
+        when(userRepository.findById(9L)).thenReturn(Optional.of(staff));
+        when(bookingRepository.findById(3001L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.completeBooking(staffUser, 3001L, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Only confirmed bookings can be completed");
     }
 }
