@@ -27,6 +27,10 @@ export const endpoints = {
     detail: (slug) => `/restaurants/${slug}`
   },
   booking: {
+    create: "/bookings",
+    history: "/bookings/me"
+  },
+  orders: {
     checkout: "/orders",
     history: "/orders/me"
   },

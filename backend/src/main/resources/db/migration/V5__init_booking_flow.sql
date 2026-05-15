@@ -1,0 +1,82 @@
+CREATE TABLE bookings (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    booking_code VARCHAR(30) NOT NULL,
+    order_id BIGINT NOT NULL,
+    order_item_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    service_type VARCHAR(20) NOT NULL,
+    service_id BIGINT NOT NULL,
+    contact_name VARCHAR(150) NOT NULL,
+    contact_phone VARCHAR(20) NOT NULL,
+    contact_email VARCHAR(255) NOT NULL,
+    guest_count INT NOT NULL DEFAULT 1,
+    special_requests TEXT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING_CONFIRMATION',
+    staff_id BIGINT NULL,
+    staff_note TEXT NULL,
+    confirmed_at DATETIME NULL,
+    cancelled_at DATETIME NULL,
+    completed_at DATETIME NULL,
+    cancel_reason TEXT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_bookings_booking_code (booking_code),
+    UNIQUE KEY uq_bookings_order_item (order_item_id),
+    INDEX idx_bookings_user_id (user_id),
+    INDEX idx_bookings_order_id (order_id),
+    INDEX idx_bookings_status (status),
+    INDEX idx_bookings_service (service_type, service_id),
+    CONSTRAINT fk_bookings_order FOREIGN KEY (order_id) REFERENCES orders(id),
+    CONSTRAINT fk_bookings_order_item FOREIGN KEY (order_item_id) REFERENCES order_items(id),
+    CONSTRAINT fk_bookings_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_bookings_staff FOREIGN KEY (staff_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE hotel_bookings (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    booking_id BIGINT NOT NULL,
+    hotel_id BIGINT NOT NULL,
+    room_type_id BIGINT NULL,
+    check_in_date DATE NOT NULL,
+    check_out_date DATE NOT NULL,
+    num_nights INT NOT NULL,
+    num_rooms INT NOT NULL DEFAULT 1,
+    price_per_night DECIMAL(15, 2) NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_hotel_bookings_booking_id (booking_id),
+    CONSTRAINT fk_hotel_bookings_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    CONSTRAINT fk_hotel_bookings_hotel FOREIGN KEY (hotel_id) REFERENCES hotels(id),
+    CONSTRAINT fk_hotel_bookings_room_type FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE tour_bookings (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    booking_id BIGINT NOT NULL,
+    tour_id BIGINT NOT NULL,
+    tour_slot_id BIGINT NULL,
+    departure_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    departure_time TIME NULL,
+    guest_count INT NOT NULL DEFAULT 1,
+    price_per_guest DECIMAL(15, 2) NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_tour_bookings_booking_id (booking_id),
+    CONSTRAINT fk_tour_bookings_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    CONSTRAINT fk_tour_bookings_tour FOREIGN KEY (tour_id) REFERENCES tours(id),
+    CONSTRAINT fk_tour_bookings_slot FOREIGN KEY (tour_slot_id) REFERENCES tour_slots(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE restaurant_bookings (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    booking_id BIGINT NOT NULL,
+    restaurant_id BIGINT NOT NULL,
+    reservation_date DATE NOT NULL,
+    reservation_time TIME NOT NULL,
+    party_size INT NOT NULL DEFAULT 1,
+    price_per_guest DECIMAL(15, 2) NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_restaurant_bookings_booking_id (booking_id),
+    CONSTRAINT fk_restaurant_bookings_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    CONSTRAINT fk_restaurant_bookings_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurants(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

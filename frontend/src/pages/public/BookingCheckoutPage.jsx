@@ -38,7 +38,7 @@ export function BookingCheckoutPage() {
   const createOrderMutation = useMutation({
     mutationFn: createOrderDraft,
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.booking.history });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.history });
       setPageMessageTone("success");
       setPageMessage(
         `Checkout draft ${response.orderCode} saved successfully. Estimated total ${formatCurrency(response.totalAmount)}.`

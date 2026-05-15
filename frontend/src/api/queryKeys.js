@@ -20,6 +20,9 @@ export const queryKeys = {
     list: (params) => ["restaurants", "list", params],
     detail: (slug) => ["restaurants", "detail", slug]
   },
+  orders: {
+    history: ["orders", "history"]
+  },
   booking: {
     checkout: ["booking", "checkout"],
     history: ["booking", "history"]
