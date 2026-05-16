@@ -22,6 +22,7 @@ import { HotelDetailPage } from "@/pages/public/HotelDetailPage";
 import { HotelListPage } from "@/pages/public/HotelListPage";
 import { RestaurantDetailPage } from "@/pages/public/RestaurantDetailPage";
 import { RestaurantListPage } from "@/pages/public/RestaurantListPage";
+import { SearchResultsPage } from "@/pages/public/SearchResultsPage";
 import { TourDetailPage } from "@/pages/public/TourDetailPage";
 import { TourListPage } from "@/pages/public/TourListPage";
 import { StaffDashboardPage } from "@/pages/staff/StaffDashboardPage";
@@ -33,6 +34,7 @@ export function AppRouter() {
     <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/search" element={<SearchResultsPage />} />
         <Route path="/hotels" element={<HotelListPage />} />
         <Route path="/hotels/:slug" element={<HotelDetailPage />} />
         <Route path="/tours" element={<TourListPage />} />

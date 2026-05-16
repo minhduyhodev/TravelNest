@@ -1,6 +1,7 @@
-import { useDeferredValue, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 import { fetchRestaurants } from "@/api/restaurants";
 import { queryKeys } from "@/api/queryKeys";
@@ -9,12 +10,37 @@ import { PageShell } from "@/components/layout/PageShell";
 import { Input } from "@/components/ui/input";
 
 export function RestaurantListPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const keywordParam = searchParams.get("keyword") || "";
+  const [searchTerm, setSearchTerm] = useState(keywordParam);
+
+  useEffect(() => {
+    setSearchTerm(keywordParam);
+  }, [keywordParam]);
+
   const deferredSearchTerm = useDeferredValue(searchTerm.trim());
   const restaurantQuery = useQuery({
     queryKey: queryKeys.restaurants.list({ keyword: deferredSearchTerm || null }),
     queryFn: () => fetchRestaurants(deferredSearchTerm ? { keyword: deferredSearchTerm } : {})
   });
+
+  const handleSearchChange = (event) => {
+    const nextValue = event.target.value;
+    setSearchTerm(nextValue);
+
+    startTransition(() => {
+      const nextParams = new URLSearchParams(searchParams);
+      const normalizedKeyword = nextValue.trim();
+
+      if (normalizedKeyword) {
+        nextParams.set("keyword", normalizedKeyword);
+      } else {
+        nextParams.delete("keyword");
+      }
+
+      setSearchParams(nextParams, { replace: true });
+    });
+  };
 
   return (
     <PageShell className="space-y-6">
@@ -34,7 +60,7 @@ export function RestaurantListPage() {
                 className="pl-9"
                 placeholder="Cuisine or restaurant name"
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={handleSearchChange}
               />
             </div>
             <div className="mt-3 space-y-2 text-sm text-muted-foreground">

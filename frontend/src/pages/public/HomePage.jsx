@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 import { fetchHotels } from "@/api/hotels";
 import { queryKeys } from "@/api/queryKeys";
@@ -12,9 +13,13 @@ import { RestaurantCard } from "@/components/data-display/RestaurantCard";
 import { TourCard } from "@/components/data-display/TourCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ROUTES } from "@/routes/paths";
 
 export function HomePage() {
   const { t } = useTranslation("home");
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
   const hotelsQuery = useQuery({
     queryKey: queryKeys.hotels.list({ featured: true }),
     queryFn: () => fetchHotels()
@@ -31,6 +36,17 @@ export function HomePage() {
   const featuredHotels = (hotelsQuery.data || []).slice(0, 3);
   const featuredTours = (toursQuery.data || []).slice(0, 3);
   const featuredRestaurants = (restaurantsQuery.data || []).slice(0, 3);
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+
+    const keyword = searchTerm.trim();
+    if (!keyword) {
+      return;
+    }
+
+    navigate(`${ROUTES.search}?keyword=${encodeURIComponent(keyword)}`);
+  };
 
   return (
     <PageShell className="space-y-10">
@@ -54,21 +70,28 @@ export function HomePage() {
             </div>
           </div>
           <div className="rounded-xl border bg-card p-5 shadow-floating">
-            <div className="space-y-3">
+            <form className="space-y-3" onSubmit={handleSearchSubmit}>
               <p className="font-medium">Smart search</p>
-              <div className="rounded-md border bg-background px-3 py-3 text-sm text-muted-foreground">
-                Destination, hotel, tour, restaurant
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-md border bg-background px-3 py-3 text-sm text-muted-foreground">
-                  Dates
+              <Input
+                placeholder="Destination, hotel, tour, restaurant"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+              <div className="grid grid-cols-2 gap-3 text-sm text-muted-foreground">
+                <div className="rounded-md border bg-background px-3 py-3">
+                  Hotels and stays
                 </div>
-                <div className="rounded-md border bg-background px-3 py-3 text-sm text-muted-foreground">
-                  Guests
+                <div className="rounded-md border bg-background px-3 py-3">
+                  Tours and experiences
+                </div>
+                <div className="col-span-2 rounded-md border bg-background px-3 py-3">
+                  Restaurants and reservations
                 </div>
               </div>
-              <Button className="w-full">Search now</Button>
-            </div>
+              <Button className="w-full" type="submit" disabled={!searchTerm.trim()}>
+                Search now
+              </Button>
+            </form>
           </div>
         </CardContent>
       </Card>
