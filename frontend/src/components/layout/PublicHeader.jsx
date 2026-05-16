@@ -1,7 +1,8 @@
-import { Menu, PlaneTakeoff } from "lucide-react";
+import { Menu, PlaneTakeoff, Search } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
+import { GlobalSearchForm } from "@/components/forms/GlobalSearchForm";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/routes/paths";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -21,7 +22,7 @@ export function PublicHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between gap-4">
+      <div className="container flex min-h-16 flex-wrap items-center gap-4 py-3 lg:flex-nowrap">
         <NavLink to={ROUTES.home} className="flex items-center gap-2 text-primary">
           <PlaneTakeoff className="h-5 w-5" />
           <span className="font-heading text-lg font-semibold">{t("brand")}</span>
@@ -37,7 +38,20 @@ export function PublicHeader() {
             {t("restaurants")}
           </NavLink>
         </nav>
-        <div className="flex items-center gap-2">
+        <GlobalSearchForm
+          className="hidden min-w-0 flex-1 xl:grid xl:max-w-xl xl:grid-cols-[1fr_auto]"
+          placeholder="Search stays, tours, and dining"
+          submitLabel="Go"
+          buttonSize="sm"
+          inputClassName="h-9"
+        />
+        <div className="ml-auto flex items-center gap-2">
+          <Button className="xl:hidden" size="sm" variant="ghost" asChild>
+            <NavLink to={ROUTES.search}>
+              <Search className="h-4 w-4" />
+              <span className="sr-only">Open search</span>
+            </NavLink>
+          </Button>
           {hasHydrated && user ? (
             <>
               <div className="hidden text-right sm:block">

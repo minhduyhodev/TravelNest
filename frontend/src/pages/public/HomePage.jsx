@@ -1,25 +1,21 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 import { fetchHotels } from "@/api/hotels";
 import { queryKeys } from "@/api/queryKeys";
 import { fetchRestaurants } from "@/api/restaurants";
 import { fetchTours } from "@/api/tours";
+import { GlobalSearchForm } from "@/components/forms/GlobalSearchForm";
 import { PageShell } from "@/components/layout/PageShell";
 import { HotelCard } from "@/components/data-display/HotelCard";
 import { RestaurantCard } from "@/components/data-display/RestaurantCard";
 import { TourCard } from "@/components/data-display/TourCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { ROUTES } from "@/routes/paths";
 
 export function HomePage() {
   const { t } = useTranslation("home");
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
   const hotelsQuery = useQuery({
     queryKey: queryKeys.hotels.list({ featured: true }),
     queryFn: () => fetchHotels()
@@ -36,17 +32,6 @@ export function HomePage() {
   const featuredHotels = (hotelsQuery.data || []).slice(0, 3);
   const featuredTours = (toursQuery.data || []).slice(0, 3);
   const featuredRestaurants = (restaurantsQuery.data || []).slice(0, 3);
-
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-
-    const keyword = searchTerm.trim();
-    if (!keyword) {
-      return;
-    }
-
-    navigate(`${ROUTES.search}?keyword=${encodeURIComponent(keyword)}`);
-  };
 
   return (
     <PageShell className="space-y-10">
@@ -70,12 +55,13 @@ export function HomePage() {
             </div>
           </div>
           <div className="rounded-xl border bg-card p-5 shadow-floating">
-            <form className="space-y-3" onSubmit={handleSearchSubmit}>
+            <div className="space-y-3">
               <p className="font-medium">Smart search</p>
-              <Input
+              <GlobalSearchForm
+                className="space-y-0 md:grid-cols-[1fr_auto]"
                 placeholder="Destination, hotel, tour, restaurant"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                submitLabel="Search now"
+                buttonClassName="w-full md:w-auto"
               />
               <div className="grid grid-cols-2 gap-3 text-sm text-muted-foreground">
                 <div className="rounded-md border bg-background px-3 py-3">
@@ -88,10 +74,7 @@ export function HomePage() {
                   Restaurants and reservations
                 </div>
               </div>
-              <Button className="w-full" type="submit" disabled={!searchTerm.trim()}>
-                Search now
-              </Button>
-            </form>
+            </div>
           </div>
         </CardContent>
       </Card>

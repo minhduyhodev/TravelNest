@@ -1,19 +1,18 @@
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
 import { NavLink, useSearchParams } from "react-router-dom";
 
 import { fetchHotels } from "@/api/hotels";
 import { queryKeys } from "@/api/queryKeys";
 import { fetchRestaurants } from "@/api/restaurants";
 import { fetchTours } from "@/api/tours";
+import { GlobalSearchForm } from "@/components/forms/GlobalSearchForm";
 import { HotelCard } from "@/components/data-display/HotelCard";
 import { RestaurantCard } from "@/components/data-display/RestaurantCard";
 import { TourCard } from "@/components/data-display/TourCard";
 import { PageShell } from "@/components/layout/PageShell";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/routes/paths";
 
 function buildCatalogSearchPath(basePath, keyword) {
@@ -59,14 +58,8 @@ function SearchResultSection({ title, description, items, isLoading, isError, er
 }
 
 export function SearchResultsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const keywordParam = searchParams.get("keyword")?.trim() || "";
-  const [searchTerm, setSearchTerm] = useState(keywordParam);
-
-  useEffect(() => {
-    setSearchTerm(keywordParam);
-  }, [keywordParam]);
-
   const deferredKeyword = useDeferredValue(keywordParam);
   const hasKeyword = deferredKeyword.length > 0;
 
@@ -92,18 +85,6 @@ export function SearchResultsPage() {
   const totalResults = hotels.length + tours.length + restaurants.length;
   const isSearching = hotelQuery.isLoading || tourQuery.isLoading || restaurantQuery.isLoading;
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    const normalizedKeyword = searchTerm.trim();
-    if (!normalizedKeyword) {
-      setSearchParams({}, { replace: true });
-      return;
-    }
-
-    setSearchParams({ keyword: normalizedKeyword }, { replace: true });
-  };
-
   return (
     <PageShell className="space-y-8">
       <Card className="overflow-hidden border-none bg-hero-glow">
@@ -116,20 +97,10 @@ export function SearchResultsPage() {
             </p>
           </div>
 
-          <form className="grid gap-3 md:grid-cols-[1fr_auto]" onSubmit={handleSubmit}>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                className="pl-9"
-                placeholder="Try Da Nang, beach, seafood, or spa"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
-            </div>
-            <Button type="submit">
-              Search
-            </Button>
-          </form>
+          <GlobalSearchForm
+            initialValue={keywordParam}
+            placeholder="Try Da Nang, beach, seafood, or spa"
+          />
 
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild>
@@ -163,7 +134,7 @@ export function SearchResultsPage() {
               </h2>
             </div>
             <p className="text-sm text-muted-foreground">
-              Hotels: {hotels.length} - Tours: {tours.length} - Restaurants: {restaurants.length}
+              Hotels: {hotels.length} | Tours: {tours.length} | Restaurants: {restaurants.length}
             </p>
           </div>
 
