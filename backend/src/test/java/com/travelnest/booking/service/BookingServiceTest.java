@@ -11,6 +11,7 @@ import com.travelnest.booking.dto.CreateBookingRequest;
 import com.travelnest.booking.entity.BookingEntity;
 import com.travelnest.booking.repository.BookingRepository;
 import com.travelnest.common.exception.BadRequestException;
+import com.travelnest.common.exception.ResourceNotFoundException;
 import com.travelnest.hotel.entity.HotelEntity;
 import com.travelnest.hotel.entity.RoomTypeEntity;
 import com.travelnest.hotel.repository.HotelRepository;
@@ -196,6 +197,57 @@ class BookingServiceTest {
         assertThat(response).hasSize(1);
         assertThat(response.getFirst().getBookingCode()).isEqualTo("BK-001");
         assertThat(response.getFirst().getServiceName()).isEqualTo("Ha Giang Loop Escape");
+    }
+
+    @Test
+    void getBookingDetail_returnsCustomerBooking() {
+        OrderEntity order = new OrderEntity();
+        order.setOrderCode("TN-1001");
+        order.setTotalAmount(new BigDecimal("8580000"));
+        order.setPreferredPaymentMethod("MOMO");
+
+        OrderItemEntity item = new OrderItemEntity();
+        item.setServiceType("TOUR");
+        item.setServiceId(8L);
+        item.setServiceName("Ha Giang Loop Escape");
+        item.setVariantId(21L);
+        item.setVariantName("Departure 2026-06-08");
+        item.setQuantity(2);
+        item.setGuestCount(2);
+        item.setStartDate(LocalDate.of(2026, 6, 8));
+        item.setEndDate(LocalDate.of(2026, 6, 10));
+        order.addItem(item);
+
+        BookingEntity booking = new BookingEntity();
+        booking.setId(3001L);
+        booking.setBookingCode("BK-001");
+        booking.setOrder(order);
+        booking.setOrderItem(item);
+        booking.setUser(user);
+        booking.setServiceType("TOUR");
+        booking.setServiceId(8L);
+        booking.setStatus("CONFIRMED");
+        booking.setContactName("Travel Customer");
+        booking.setContactPhone("0901234567");
+        booking.setContactEmail("customer@travelnest.test");
+        booking.setGuestCount(2);
+
+        when(bookingRepository.findByIdAndUserId(3001L, 7L)).thenReturn(Optional.of(booking));
+
+        BookingResponse response = bookingService.getBookingDetail(authenticatedUser, 3001L);
+
+        assertThat(response.getBookingCode()).isEqualTo("BK-001");
+        assertThat(response.getStatus()).isEqualTo("CONFIRMED");
+        assertThat(response.getServiceName()).isEqualTo("Ha Giang Loop Escape");
+    }
+
+    @Test
+    void getBookingDetail_rejectsCustomerAccessToAnotherBooking() {
+        when(bookingRepository.findByIdAndUserId(3001L, 7L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookingService.getBookingDetail(authenticatedUser, 3001L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Booking not found");
     }
 
     @Test

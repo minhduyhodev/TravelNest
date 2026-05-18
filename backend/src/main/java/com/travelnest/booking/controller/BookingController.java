@@ -40,6 +40,16 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success(bookingService.getCurrentUserBookings(authenticatedUser)));
     }
 
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<ApiResponse<BookingResponse>> getBookingDetail(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @PathVariable Long bookingId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                bookingService.getBookingDetail(authenticatedUser, bookingId)
+        ));
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<BookingResponse>>> getManagementBookings(

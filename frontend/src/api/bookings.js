@@ -6,6 +6,11 @@ export async function fetchMyBookings() {
   return data.data;
 }
 
+export async function fetchBookingDetail(bookingId) {
+  const { data } = await axiosClient.get(endpoints.booking.detail(bookingId));
+  return data.data;
+}
+
 export async function createBooking(payload) {
   const { data } = await axiosClient.post(endpoints.booking.create, payload);
   return data.data;

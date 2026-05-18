@@ -26,6 +26,7 @@ export const queryKeys = {
   booking: {
     checkout: ["booking", "checkout"],
     history: ["booking", "history"],
+    detail: (bookingId) => ["booking", "detail", bookingId],
     queueRoot: ["booking", "queue"],
     queue: (filters) => ["booking", "queue", filters]
   },

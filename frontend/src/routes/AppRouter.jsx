@@ -9,6 +9,7 @@ import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { AdminReportsPage } from "@/pages/admin/AdminReportsPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AccountProfilePage } from "@/pages/account/AccountProfilePage";
+import { UserBookingDetailPage } from "@/pages/account/UserBookingDetailPage";
 import { UserBookingsPage } from "@/pages/account/UserBookingsPage";
 import { UserDashboardPage } from "@/pages/account/UserDashboardPage";
 import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
@@ -57,6 +58,7 @@ export function AppRouter() {
           <Route path="/account" element={<UserDashboardPage />} />
           <Route path="/account/profile" element={<AccountProfilePage />} />
           <Route path="/account/bookings" element={<UserBookingsPage />} />
+          <Route path="/account/bookings/:bookingId" element={<UserBookingDetailPage />} />
         </Route>
       </Route>
 

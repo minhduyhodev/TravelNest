@@ -15,6 +15,8 @@ export const ROUTES = {
   resetPassword: "/reset-password",
   account: "/account",
   accountProfile: "/account/profile",
+  accountBookings: "/account/bookings",
+  accountBookingDetail: "/account/bookings/:bookingId",
   staff: "/staff",
   admin: "/admin"
 };

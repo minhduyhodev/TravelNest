@@ -116,6 +116,11 @@ export function UserBookingsPage() {
                       </div>
                     </div>
                   </div>
+                  <div className="mt-4">
+                    <Button asChild variant="outline">
+                      <NavLink to={`/account/bookings/${booking.id}`}>View details</NavLink>
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

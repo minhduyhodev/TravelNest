@@ -109,6 +109,21 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
+    public BookingResponse getBookingDetail(AuthenticatedUser authenticatedUser, Long bookingId) {
+        BookingEntity booking = switch (normalizeActorRole(authenticatedUser)) {
+            case "CUSTOMER" -> bookingRepository.findByIdAndUserId(bookingId, authenticatedUser.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+            case "STAFF", "ADMIN" -> {
+                requireUser(authenticatedUser.getUserId());
+                yield requireBooking(bookingId);
+            }
+            default -> throw new ResourceNotFoundException("Booking not found");
+        };
+
+        return mapResponse(booking);
+    }
+
+    @Transactional(readOnly = true)
     public List<BookingResponse> getManagementBookings(String status, String serviceType, LocalDate serviceDate) {
         return bookingRepository.searchManagementBookings(
                         normalizeFilter(status),
@@ -334,6 +349,12 @@ public class BookingService {
             return null;
         }
         return value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private String normalizeActorRole(AuthenticatedUser authenticatedUser) {
+        return authenticatedUser.getRole() == null
+                ? ""
+                : authenticatedUser.getRole().trim().toUpperCase(Locale.ROOT);
     }
 
     private String generateBookingCode() {
