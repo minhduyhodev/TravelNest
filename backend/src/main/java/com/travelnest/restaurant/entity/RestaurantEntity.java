@@ -106,4 +106,7 @@ public class RestaurantEntity extends BaseAuditEntity {
     @OneToMany(mappedBy = "restaurant", fetch = FetchType.LAZY)
     @OrderBy("sortOrder asc")
     private Set<MenuItemEntity> menuItems = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "restaurant", fetch = FetchType.LAZY)
+    private Set<RestaurantTableEntity> tables = new LinkedHashSet<>();
 }

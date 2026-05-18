@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NavLink } from "react-router-dom";
 
+import { fetchHotelAvailability } from "@/api/hotels";
 import { createOrderDraft } from "@/api/orders";
+import { fetchRestaurantAvailability } from "@/api/restaurants";
+import { fetchTourAvailability } from "@/api/tours";
 import { fetchUserAddresses } from "@/api/users";
 import { queryKeys } from "@/api/queryKeys";
 import { BookingSummaryCard } from "@/components/data-display/BookingSummaryCard";
@@ -19,6 +22,77 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { formatCurrency } from "@/utils/currency";
 
+function buildAvailabilityRequest(draft) {
+  if (!draft?.serviceType || !draft?.serviceSlug) {
+    return null;
+  }
+
+  if (
+    draft.serviceType === "HOTEL"
+    && draft.checkInDate
+    && draft.checkOutDate
+    && draft.guestCount
+    && draft.roomCount
+  ) {
+    return {
+      serviceType: "HOTEL",
+      slug: draft.serviceSlug,
+      params: {
+        checkInDate: draft.checkInDate,
+        checkOutDate: draft.checkOutDate,
+        guestCount: draft.guestCount,
+        roomCount: draft.roomCount,
+        roomLabel: draft.roomLabel || null
+      }
+    };
+  }
+
+  if (draft.serviceType === "TOUR" && draft.departureDate && draft.guestCount) {
+    return {
+      serviceType: "TOUR",
+      slug: draft.serviceSlug,
+      params: {
+        departureDate: draft.departureDate,
+        guestCount: draft.guestCount
+      }
+    };
+  }
+
+  if (draft.serviceType === "RESTAURANT" && draft.reservationDate && draft.reservationTime && draft.guestCount) {
+    return {
+      serviceType: "RESTAURANT",
+      slug: draft.serviceSlug,
+      params: {
+        reservationDate: draft.reservationDate,
+        reservationTime: draft.reservationTime,
+        guestCount: draft.guestCount
+      }
+    };
+  }
+
+  return null;
+}
+
+function getAvailabilitySummary(serviceType, availability) {
+  if (!availability) {
+    return null;
+  }
+
+  if (serviceType === "HOTEL") {
+    return `${availability.availableRooms} room(s) currently open${availability.roomLabel ? ` for ${availability.roomLabel}` : ""}.`;
+  }
+
+  if (serviceType === "TOUR") {
+    return `${availability.availableSeats} seat(s) currently open on this departure.`;
+  }
+
+  if (serviceType === "RESTAURANT") {
+    return `${availability.availableTables} matching table(s) currently open around this time.`;
+  }
+
+  return null;
+}
+
 export function BookingCheckoutPage() {
   const queryClient = useQueryClient();
   const draft = useBookingStore((state) => state.draft);
@@ -28,11 +102,29 @@ export function BookingCheckoutPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const [pageMessage, setPageMessage] = useState("");
   const [pageMessageTone, setPageMessageTone] = useState("success");
+  const availabilityRequest = buildAvailabilityRequest(draft);
 
   const addressesQuery = useQuery({
     queryKey: queryKeys.users.addresses,
     queryFn: fetchUserAddresses,
     enabled: Boolean(accessToken)
+  });
+  const availabilityQuery = useQuery({
+    queryKey: queryKeys.booking.availability(
+      availabilityRequest?.serviceType,
+      availabilityRequest?.slug,
+      availabilityRequest?.params
+    ),
+    queryFn: () => {
+      if (availabilityRequest.serviceType === "HOTEL") {
+        return fetchHotelAvailability(availabilityRequest.slug, availabilityRequest.params);
+      }
+      if (availabilityRequest.serviceType === "TOUR") {
+        return fetchTourAvailability(availabilityRequest.slug, availabilityRequest.params);
+      }
+      return fetchRestaurantAvailability(availabilityRequest.slug, availabilityRequest.params);
+    },
+    enabled: Boolean(availabilityRequest)
   });
 
   const createOrderMutation = useMutation({
@@ -124,6 +216,18 @@ export function BookingCheckoutPage() {
     if (!draft.serviceType || !draft.serviceId) {
       setPageMessageTone("error");
       setPageMessage("The selected service is missing required checkout identifiers.");
+      return;
+    }
+
+    if (availabilityQuery.isFetching) {
+      setPageMessageTone("error");
+      setPageMessage("Please wait until the live availability check finishes.");
+      return;
+    }
+
+    if (availabilityQuery.data && !availabilityQuery.data.available) {
+      setPageMessageTone("error");
+      setPageMessage(availabilityQuery.data.message || "The selected service is no longer available.");
       return;
     }
 
@@ -319,6 +423,39 @@ export function BookingCheckoutPage() {
                     </div>
                   </div>
                 ) : null}
+
+                <div className="rounded-xl border bg-surface-1 p-4">
+                  <p className="text-sm font-medium">Live availability</p>
+                  {!availabilityRequest ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Add your dates, guest count, or reservation time to run a live availability check.
+                    </p>
+                  ) : null}
+                  {availabilityRequest && availabilityQuery.isLoading ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Checking current availability for this selection...
+                    </p>
+                  ) : null}
+                  {availabilityRequest && availabilityQuery.isError ? (
+                    <p className="mt-1 text-sm text-rose-700">
+                      {availabilityQuery.error.message}
+                    </p>
+                  ) : null}
+                  {availabilityRequest && availabilityQuery.data ? (
+                    <div
+                      className={`mt-3 rounded-lg border px-3 py-3 text-sm ${
+                        availabilityQuery.data.available
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-rose-200 bg-rose-50 text-rose-700"
+                      }`}
+                    >
+                      <p className="font-medium">{availabilityQuery.data.message}</p>
+                      <p className="mt-1">
+                        {getAvailabilitySummary(draft.serviceType, availabilityQuery.data)}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
               </section>
 
               <section className="space-y-4">
@@ -436,8 +573,16 @@ export function BookingCheckoutPage() {
                 </div>
               </section>
 
-              <Button className="w-full" type="submit" disabled={createOrderMutation.isPending}>
-                {createOrderMutation.isPending ? "Saving checkout draft..." : "Save checkout draft"}
+              <Button
+                className="w-full"
+                type="submit"
+                disabled={createOrderMutation.isPending || availabilityQuery.isFetching}
+              >
+                {createOrderMutation.isPending
+                  ? "Saving checkout draft..."
+                  : availabilityQuery.isFetching
+                    ? "Checking availability..."
+                    : "Save checkout draft"}
               </Button>
             </form>
           </CardContent>

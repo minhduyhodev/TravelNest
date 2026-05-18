@@ -10,3 +10,8 @@ export async function fetchHotelDetail(slug) {
   const { data } = await axiosClient.get(endpoints.hotels.detail(slug));
   return data.data;
 }
+
+export async function fetchHotelAvailability(slug, params) {
+  const { data } = await axiosClient.get(endpoints.hotels.availability(slug), { params });
+  return data.data;
+}

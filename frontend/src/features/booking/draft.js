@@ -52,10 +52,11 @@ function getHotelNightCount(checkInDate, checkOutDate) {
   return Math.max(1, Math.round(diffTime / 86400000));
 }
 
-function createBaseDraft(serviceType, serviceId, serviceName, location, priceAmount) {
+function createBaseDraft(serviceType, serviceId, serviceSlug, serviceName, location, priceAmount) {
   return {
     serviceType,
     serviceId,
+    serviceSlug,
     serviceName,
     location,
     priceAmount,
@@ -71,7 +72,7 @@ function createBaseDraft(serviceType, serviceId, serviceName, location, priceAmo
 
 export function createHotelBookingDraft(hotel) {
   return {
-    ...createBaseDraft("HOTEL", hotel.id, hotel.name, hotel.location, hotel.priceFrom),
+    ...createBaseDraft("HOTEL", hotel.id, hotel.slug, hotel.name, hotel.location, hotel.priceFrom),
     roomLabel: hotel.roomOptions?.[0] || "Standard room",
     roomCount: 1,
     checkInDate: getNextDate(7),
@@ -82,7 +83,7 @@ export function createHotelBookingDraft(hotel) {
 
 export function createTourBookingDraft(tour) {
   return {
-    ...createBaseDraft("TOUR", tour.id, tour.name, tour.location, tour.priceFrom),
+    ...createBaseDraft("TOUR", tour.id, tour.slug, tour.name, tour.location, tour.priceFrom),
     guestCount: 2,
     departureDate: getNextDate(14),
     scheduleLabel: `${tour.departure} / ${tour.duration}`
@@ -91,7 +92,7 @@ export function createTourBookingDraft(tour) {
 
 export function createRestaurantBookingDraft(restaurant) {
   return {
-    ...createBaseDraft("RESTAURANT", restaurant.id, restaurant.name, restaurant.location, restaurant.priceFrom),
+    ...createBaseDraft("RESTAURANT", restaurant.id, restaurant.slug, restaurant.name, restaurant.location, restaurant.priceFrom),
     reservationDate: getNextDate(3),
     reservationTime: "19:00",
     scheduleLabel: restaurant.schedule

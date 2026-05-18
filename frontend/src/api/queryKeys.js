@@ -27,6 +27,7 @@ export const queryKeys = {
     checkout: ["booking", "checkout"],
     history: ["booking", "history"],
     detail: (bookingId) => ["booking", "detail", bookingId],
+    availability: (serviceType, slug, params) => ["booking", "availability", serviceType, slug, params],
     queueRoot: ["booking", "queue"],
     queue: (filters) => ["booking", "queue", filters]
   },

@@ -3,6 +3,8 @@ package com.travelnest.hotel.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.travelnest.booking.repository.HotelBookingRepository;
+import com.travelnest.hotel.dto.HotelAvailabilityResponse;
 import com.travelnest.hotel.dto.HotelDetailResponse;
 import com.travelnest.hotel.dto.HotelSummaryResponse;
 import com.travelnest.hotel.entity.HotelAmenityEntity;
@@ -26,11 +28,14 @@ class HotelServiceTest {
     @Mock
     private HotelRepository hotelRepository;
 
+    @Mock
+    private HotelBookingRepository hotelBookingRepository;
+
     private HotelService hotelService;
 
     @BeforeEach
     void setUp() {
-        hotelService = new HotelService(hotelRepository, new HotelMapper());
+        hotelService = new HotelService(hotelRepository, hotelBookingRepository, new HotelMapper());
     }
 
     @Test
@@ -62,6 +67,33 @@ class HotelServiceTest {
         assertThat(response.getPolicies()).anyMatch(policy -> policy.contains("48 hours"));
     }
 
+    @Test
+    void getAvailability_returnsRemainingRoomsForMatchingOption() {
+        HotelEntity hotel = buildHotel();
+        hotel.getRoomTypes().forEach(roomType -> roomType.setMaxGuests((byte) 4));
+
+        when(hotelRepository.findBySlugAndDeletedFalseAndStatus("da-nang-ocean-suites", "ACTIVE"))
+                .thenReturn(Optional.of(hotel));
+        when(hotelBookingRepository.sumReservedRooms(
+                10L,
+                101L,
+                java.time.LocalDate.of(2026, 6, 10),
+                java.time.LocalDate.of(2026, 6, 12)
+        )).thenReturn(1);
+
+        HotelAvailabilityResponse response = hotelService.getAvailability(
+                "da-nang-ocean-suites",
+                java.time.LocalDate.of(2026, 6, 10),
+                java.time.LocalDate.of(2026, 6, 12),
+                2,
+                1,
+                null
+        );
+
+        assertThat(response.isAvailable()).isTrue();
+        assertThat(response.getAvailableRooms()).isGreaterThanOrEqualTo(1);
+    }
+
     private HotelEntity buildHotel() {
         HotelEntity hotel = new HotelEntity();
         hotel.setId(10L);
@@ -81,12 +113,18 @@ class HotelServiceTest {
         hotel.setStarRating((byte) 5);
 
         RoomTypeEntity deluxe = new RoomTypeEntity();
+        deluxe.setId(101L);
         deluxe.setNameEn("Deluxe Ocean");
         deluxe.setBasePrice(new BigDecimal("2400000"));
+        deluxe.setTotalRooms(3);
+        deluxe.setMaxGuests((byte) 2);
 
         RoomTypeEntity family = new RoomTypeEntity();
+        family.setId(102L);
         family.setNameEn("Family Suite");
         family.setBasePrice(new BigDecimal("3100000"));
+        family.setTotalRooms(2);
+        family.setMaxGuests((byte) 4);
 
         hotel.setRoomTypes(new LinkedHashSet<>(List.of(deluxe, family)));
 

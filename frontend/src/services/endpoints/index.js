@@ -16,15 +16,18 @@ export const endpoints = {
   },
   hotels: {
     list: "/hotels",
-    detail: (slug) => `/hotels/${slug}`
+    detail: (slug) => `/hotels/${slug}`,
+    availability: (slug) => `/hotels/${slug}/availability`
   },
   tours: {
     list: "/tours",
-    detail: (slug) => `/tours/${slug}`
+    detail: (slug) => `/tours/${slug}`,
+    availability: (slug) => `/tours/${slug}/availability`
   },
   restaurants: {
     list: "/restaurants",
-    detail: (slug) => `/restaurants/${slug}`
+    detail: (slug) => `/restaurants/${slug}`,
+    availability: (slug) => `/restaurants/${slug}/availability`
   },
   booking: {
     create: "/bookings",

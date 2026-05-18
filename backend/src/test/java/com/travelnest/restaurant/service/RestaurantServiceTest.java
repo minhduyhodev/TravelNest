@@ -1,14 +1,18 @@
 package com.travelnest.restaurant.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import com.travelnest.booking.repository.RestaurantBookingRepository;
+import com.travelnest.restaurant.dto.RestaurantAvailabilityResponse;
 import com.travelnest.restaurant.dto.RestaurantDetailResponse;
 import com.travelnest.restaurant.dto.RestaurantSummaryResponse;
 import com.travelnest.restaurant.entity.MenuCategoryEntity;
 import com.travelnest.restaurant.entity.MenuItemEntity;
 import com.travelnest.restaurant.entity.RestaurantEntity;
 import com.travelnest.restaurant.repository.RestaurantRepository;
+import com.travelnest.restaurant.repository.RestaurantTableRepository;
 import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.LinkedHashSet;
@@ -26,11 +30,22 @@ class RestaurantServiceTest {
     @Mock
     private RestaurantRepository restaurantRepository;
 
+    @Mock
+    private RestaurantTableRepository restaurantTableRepository;
+
+    @Mock
+    private RestaurantBookingRepository restaurantBookingRepository;
+
     private RestaurantService restaurantService;
 
     @BeforeEach
     void setUp() {
-        restaurantService = new RestaurantService(restaurantRepository, new RestaurantMapper());
+        restaurantService = new RestaurantService(
+                restaurantRepository,
+                restaurantTableRepository,
+                restaurantBookingRepository,
+                new RestaurantMapper()
+        );
     }
 
     @Test
@@ -60,6 +75,31 @@ class RestaurantServiceTest {
         assertThat(response.getMenuCategories()).containsExactly("Signature grill", "Seafood sharing");
         assertThat(response.getMenuPreview()).containsExactly("Charred squid skewers", "Signature river prawns");
         assertThat(response.getPolicies()).anyMatch(policy -> policy.contains("Open daily"));
+    }
+
+    @Test
+    void getAvailability_returnsTableCountForReservationWindow() {
+        RestaurantEntity restaurant = buildRestaurant();
+
+        when(restaurantRepository.findBySlugAndDeletedFalseAndStatus("ember-riverside-grill", "ACTIVE"))
+                .thenReturn(Optional.of(restaurant));
+        when(restaurantTableRepository.countActiveTablesByCapacity(11L, 4)).thenReturn(2L);
+        when(restaurantBookingRepository.countConflictingReservations(
+                eq(11L),
+                eq(java.time.LocalDate.of(2026, 6, 10)),
+                eq(java.time.LocalTime.of(17, 0)),
+                eq(java.time.LocalTime.of(21, 0))
+        )).thenReturn(1L);
+
+        RestaurantAvailabilityResponse response = restaurantService.getAvailability(
+                "ember-riverside-grill",
+                java.time.LocalDate.of(2026, 6, 10),
+                java.time.LocalTime.of(19, 0),
+                4
+        );
+
+        assertThat(response.isAvailable()).isTrue();
+        assertThat(response.getAvailableTables()).isEqualTo(1);
     }
 
     private RestaurantEntity buildRestaurant() {

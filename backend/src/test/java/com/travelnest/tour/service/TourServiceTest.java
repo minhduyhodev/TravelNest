@@ -3,6 +3,8 @@ package com.travelnest.tour.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.travelnest.booking.repository.TourBookingRepository;
+import com.travelnest.tour.dto.TourAvailabilityResponse;
 import com.travelnest.tour.dto.TourDetailResponse;
 import com.travelnest.tour.dto.TourSummaryResponse;
 import com.travelnest.tour.entity.TourEntity;
@@ -27,11 +29,14 @@ class TourServiceTest {
     @Mock
     private TourRepository tourRepository;
 
+    @Mock
+    private TourBookingRepository tourBookingRepository;
+
     private TourService tourService;
 
     @BeforeEach
     void setUp() {
-        tourService = new TourService(tourRepository, new TourMapper());
+        tourService = new TourService(tourRepository, tourBookingRepository, new TourMapper());
     }
 
     @Test
@@ -68,6 +73,26 @@ class TourServiceTest {
         assertThat(response.getRequirements()).containsExactly("Bring a light jacket");
     }
 
+    @Test
+    void getAvailability_returnsSeatCountForDeparture() {
+        TourEntity tour = buildTour();
+        TourSlotEntity slot = tour.getSlots().iterator().next();
+
+        when(tourRepository.findBySlugAndDeletedFalseAndStatus("ha-giang-loop-escape", "ACTIVE"))
+                .thenReturn(Optional.of(tour));
+        when(tourBookingRepository.sumReservedGuests(501L)).thenReturn(2);
+
+        TourAvailabilityResponse response = tourService.getAvailability(
+                "ha-giang-loop-escape",
+                java.time.LocalDate.of(2026, 6, 1),
+                2
+        );
+
+        assertThat(response.isAvailable()).isTrue();
+        assertThat(response.getSlotId()).isEqualTo(slot.getId());
+        assertThat(response.getAvailableSeats()).isEqualTo(9);
+    }
+
     private TourEntity buildTour() {
         TourEntity tour = new TourEntity();
         tour.setId(7L);
@@ -84,10 +109,14 @@ class TourServiceTest {
         tour.setTotalReviews(121);
 
         TourSlotEntity slot = new TourSlotEntity();
+        slot.setId(501L);
         slot.setStatus("OPEN");
         slot.setStartDate(LocalDate.of(2026, 6, 1));
+        slot.setEndDate(LocalDate.of(2026, 6, 3));
         slot.setDepartureTime(LocalTime.of(6, 0));
         slot.setPricePerPerson(new BigDecimal("4290000"));
+        slot.setTotalSlots(18);
+        slot.setBookedSlots(7);
 
         TourItineraryEntity firstDay = new TourItineraryEntity();
         firstDay.setDayNumber((byte) 1);
